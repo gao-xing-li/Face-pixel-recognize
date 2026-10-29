@@ -159,7 +159,7 @@ def evaluate_predictions(
             "Scores apply to the supplied prediction masks. Check run_config.json and the input hashes before using them in a report.\n\n"
             "Undefined metrics are JSON null / empty CSV cells. Image means exclude these values.\n\n"
             "Case panels: original, ground truth, prediction, errors. Green=TP, red=FP, blue=FN, black=TN, yellow=ignored. Display scaling does not affect evaluation.\n"
-            + ("\nSYNTHETIC DEMO ONLY. These are hand-made masks, not project performance results.\n" if summary["provenance"]["synthetic_demo"] else ""),
+            + ("\nSYNTHETIC DEMO ONLY. Synthetic or constant predictions verify the pipeline; they are not project performance results.\n" if summary["provenance"]["synthetic_demo"] else ""),
             encoding="utf-8",
         )
         stage.rename(output_dir)

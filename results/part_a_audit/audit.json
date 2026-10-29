@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "scope": "dataset audit and ground-truth adaptation only; no detector performance",
+  "source": {
+    "repository": "gao-xing-li/Face-pixel-recognize",
+    "branch": "feat/part-a",
+    "revision": "1389a77158ab484dbdbbbb4e4e2f4d1c46a9625b",
+    "git_revision_verified": true,
+    "manifest_sha256": "006132d1c8f59804e6883337ea57aa2c07b56b0c64fb410be5d23455262fb918",
+    "metadata_sha256": "e8570b2016f1b4720448cc187ccf837ae9b57c392cf7a223b7a03187ba2765ee",
+    "split_report_sha256": "420ebeb5623f54c418e6c2b81c4d14b28a909c0a32b9e416caee50953ed5a1f2",
+    "skin_params_sha256": "66219e403e334f6830d95cf1151f371c06ebaf62535e88b89d0ef1dd5959d3ac",
+    "content_fingerprint": "234af0a445a47d0e9301dc4dd6f82225237f0c6551c445cace57906ae673a59e"
+  },
+  "mapping": {
+    "skin_ids": [
+      1,
+      2
+    ],
+    "face_positive_ids": [
+      1,
+      2,
+      4,
+      5,
+      6,
+      7,
+      10,
+      11,
+      12
+    ],
+    "face_negative_ids": [
+      0,
+      8,
+      9,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+    ],
+    "evaluation_ignore_ids": [
+      3
+    ],
+    "known_label_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+    ],
+    "label_map": {
+      "0": "background",
+      "1": "skin",
+      "2": "nose",
+      "3": "eye_g",
+      "4": "l_eye",
+      "5": "r_eye",
+      "6": "l_brow",
+      "7": "r_brow",
+      "8": "l_ear",
+      "9": "r_ear",
+      "10": "mouth",
+      "11": "u_lip",
+      "12": "l_lip",
+      "13": "hair",
+      "14": "hat",
+      "15": "ear_r",
+      "16": "neck_l",
+      "17": "neck",
+      "18": "cloth"
+    },
+    "positive_name": "face region including declared facial parts",
+    "ignore_policy": "Exclude ignored IDs from all counts and metric denominators; never use them to guide predictions"
+  },
+  "mapping_sha256": "e48c0cb5fb1b25d783eb5ba28998a720172c71b1655e27a996b0f3e75e497777",
+  "normalized_content_fingerprint": "1681e3ac3dbd95d5c33165222adb4aee3752e1a9e0e1a237154e7fdf78122dd6",
+  "normalized_manifest_sha256": "da0922889fb090b20f4badc9706bef24710a640996a0eefe9cd2e2e440319f8a",
+  "output_encoding": "binary01",
+  "splits": {
+    "train": {
+      "images": 98,
+      "total_pixels": 25690112,
+      "valid_pixels": 25680618,
+      "face_positive_pixels": 7011098,
+      "face_negative_pixels": 18669520,
+      "ignored_pixels": 9494,
+      "skin_model_pixels": 6387552
+    },
+    "validation": {
+      "images": 32,
+      "total_pixels": 8388608,
+      "valid_pixels": 8388608,
+      "face_positive_pixels": 2228122,
+      "face_negative_pixels": 6160486,
+      "ignored_pixels": 0,
+      "skin_model_pixels": 2034761
+    },
+    "test": {
+      "images": 32,
+      "total_pixels": 8388608,
+      "valid_pixels": 8388608,
+      "face_positive_pixels": 2150722,
+      "face_negative_pixels": 6237886,
+      "ignored_pixels": 0,
+      "skin_model_pixels": 1955636
+    }
+  },
+  "source_file_hashes_verified": 324,
+  "exact_duplicate_image_groups": [],
+  "training_provenance_verified": true,
+  "training_skin_pixels_verified": 6387552,
+  "training_color_statistics_recomputed": false,
+  "validation_wiring_check": {
+    "images": 32,
+    "constant_background_and_foreground_counts": "passed",
+    "is_detector_evaluation": false
+  },
+  "runtime_versions": {
+    "numpy": "2.3.5",
+    "Pillow": "12.3.0"
+  },
+  "limitations": [
+    "No identity or exhaustive near-duplicate verification",
+    "Appearance-based source selection is not verified demographic annotation",
+    "Raw labels were audited structurally; no new manual per-pixel quality approval",
+    "Color means/variances were not recomputed; saved A statistics were checked for source provenance and skin-pixel count only",
+    "No B detector, selected k or frozen configuration is present; no formal test scores were computed"
+  ]
+}

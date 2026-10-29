@@ -4,15 +4,16 @@
 
 项目以肤色统计模型为基础，在多幅图像上完成像素分割、结果展示与评价。优先使用 YCbCr 颜色空间和肤色均值、方差统计，先完成基础版本，再根据验证效果选择辅助处理。主要使用 Python、OpenCV、NumPy、Matplotlib。
 
-当前已建立**公共骨架与 C 的评价模块**，可以运行手算样例、共用指标计算和保存预测的批量评价。真实数据、A 的正式统计参数及 B 的检测/调参实现仍待接入，尚无正式实验性能结果。C 已由当前负责人认领，A/B 按原分工接入。
+当前 C 分支已提供**共用评价模块与 Part A 数据适配层**。已接入 `feat/part-a` 的固定版本：162 对原图与多类标签、98/32/32 划分及正式肤色统计；完整数据核查和验证集接线检查通过。B 的检测、调参和固定方案尚待交接，当前没有正式分割性能结果。
 
 ## 文档入口
 
 | 文档 | 用途 |
 | --- | --- |
 | [分工文档](分工文档.md) | 整合后的执行方案，明确职责、技术路线、交接和验收要求 |
-| [公共接口 v0.1](docs/interfaces.md) | 已实现评价接口、数据/预测清单、指标口径及 A/B 接入建议 |
+| [公共接口 v0.2](docs/interfaces.md) | 已实现评价接口、数据/预测清单、指标口径及 A/B 接入建议 |
 | [C 模块启动与交接](docs/C模块启动与交接.md) | C 当前可提供给 B 的内容、A/B 交接清单及后续工作 |
+| [Part A 接入核查与 B 接入方式](docs/PartA接入核查.md) | 固定数据版本、标签转换、真实数据核查结果及运行命令 |
 | [分工方案对比与采纳说明](docs/分工方案对比与采纳说明.md) | 逐项说明两版差别、最终采用哪一部分及调整理由 |
 | [补充分工方案原文](docs/参考方案/补充分工方案.md) | 保留本次提供的另一版分工，供追溯对照 |
 
@@ -59,13 +60,27 @@ summary = summarize([metrics])
 
 掩膜必须为同尺寸二维整数/布尔 0/1。函数返回 Accuracy、Precision、Recall、F1、IoU 及计数；分母为零返回 None。`global` 先累加像素计数，`image_mean` 为单独标注的逐图平均，详见接口文档。
 
+## 先接入 A 的真实数据
+
+A 的原始标签为 0–18 多类编号，清单使用 `label_path`、`val` 及项目根目录相对路径。适配层保留原文件及划分，生成脸部二值真值、有效区域和共用格式清单。按 A 的约定，皮肤与鼻子用于建模，脸部评价还包括五官，眼镜类别 3 不计入指标。
+
+在 C 分支安装后，使用独立的 A 分支副本：
+
+```text
+git -c core.autocrlf=false clone --branch feat/part-a --single-branch https://github.com/gao-xing-li/Face-pixel-recognize.git ../part-a-source
+git -C ../part-a-source checkout --detach 1389a77158ab484dbdbbbb4e4e2f4d1c46a9625b
+face-pixel-prepare-part-a --source-root ../part-a-source --source-revision 1389a77158ab484dbdbbbb4e4e2f4d1c46a9625b --output data/processed/part_a
+```
+
+已有 A 副本时直接提供其根目录，不必重新下载。原始数据始终保留在 A 副本，派生掩膜在 C 的 `data/processed/part_a`；数据和参数不从 A 分支重复提交到本分支。详细结果见接入核查文档。
+
 ## 接入 B 的保存预测
 
 ```text
-face-pixel-evaluate --manifest data/split_manifest.csv --predictions results/final-test/predictions.csv --split test --config-id final-v1 --run-config configs/final_config.json --gt-encoding binary255 --pred-encoding binary255 --output results/evaluation-final-test
+face-pixel-evaluate --manifest data/processed/part_a/split_manifest.csv --predictions results/final-test/predictions.csv --split test --config-id final-v1 --run-config configs/final_config.json --gt-encoding binary01 --pred-encoding binary255 --valid-encoding binary01 --output results/evaluation-final-test
 ```
 
-正式数据和配置到位后才能运行上述命令；编码参数按实际文件填写。B 验证时使用 `--split validation` 和对应预测清单。输出包含逐图/总体指标、配置原文件及哈希、输入文件哈希和案例图，异常会报错并避免发布部分结果。当前入口只评价已有预测，尚未调用 B 的检测程序。
+适配后的真值和有效区域均为 `binary01`，预测编码按 B 的实际文件填写。B 验证时使用 `--split validation` 和对应的 32 张预测清单。最终方案确定后再运行测试集命令；当前入口只评价已有预测，尚未调用 B 的检测程序。输出包含逐图/总体指标、配置原文件及哈希、输入文件哈希和案例图，异常会报错并避免发布部分结果。
 
 ## 公共目录与接入责任
 
@@ -75,6 +90,7 @@ src/face_pixel/
   data_io.py          # 已实现：统一清单及显式二值掩膜读取
   batch.py, cli.py    # 已实现：保存预测的批量评价
   demo.py             # 已实现：模拟样例生成与核对
+  part_a.py           # 已实现：A 原始标签审计、脸部真值/有效区域转换
 data/                 # A 维护数据说明与唯一划分
 configs/              # A 的统计、B 的固定配置，正式值待接入
 results/              # 运行结果，默认不提交

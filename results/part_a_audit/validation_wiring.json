@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "scope": "constant-prediction batch wiring only; no detector performance",
+  "split": "validation",
+  "images": 32,
+  "source_revision": "1389a77158ab484dbdbbbb4e4e2f4d1c46a9625b",
+  "normalized_content_fingerprint": "1681e3ac3dbd95d5c33165222adb4aee3752e1a9e0e1a237154e7fdf78122dd6",
+  "constant_background_counts_verified": true,
+  "pairing_config_snapshot_input_hashes_and_case_output": "passed",
+  "test_predictions_evaluated": false
+}
