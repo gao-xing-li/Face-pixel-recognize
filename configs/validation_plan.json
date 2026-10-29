@@ -1,0 +1,10 @@
+{
+  "plan_id": "part-b-validation-v1",
+  "split": "validation",
+  "metric": "global.f1",
+  "k_values": [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3],
+  "postprocess_values": ["none", "fill", "largest_fill", "close_largest_fill"],
+  "closing_kernel": 5,
+  "tie_break": "higher global F1, then simpler postprocess in listed order, then smaller k",
+  "reason": "Baseline color threshold; hole filling for eyes/mouth in the face target; largest component to remove disconnected skin-colored background; 5x5 closing before component selection. No test-based choices."
+}
