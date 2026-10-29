@@ -15,6 +15,7 @@
 | [C 模块启动与交接](docs/C模块启动与交接.md) | C 当前可提供给 B 的内容、A/B 交接清单及后续工作 |
 | [Part A 接入核查与 B 接入方式](docs/PartA接入核查.md) | 固定数据版本、标签转换、真实数据核查结果及运行命令 |
 | [完整运行逻辑与独立测试](docs/完整运行逻辑与独立测试.md) | A/B/C 数据流、最终算法、运行入口、测试结果与失败案例 |
+| [预测可视化与补充评估](docs/预测可视化与补充评估.md) | 抠图、误差叠加、逐图稳定性、边界与亮度分组 |
 | [分工方案对比与采纳说明](docs/分工方案对比与采纳说明.md) | 逐项说明两版差别、最终采用哪一部分及调整理由 |
 | [补充分工方案原文](docs/参考方案/补充分工方案.md) | 保留本次提供的另一版分工，供追溯对照 |
 
@@ -36,12 +37,14 @@
 需要 Python 3.10 或更新版本，建议在独立虚拟环境中运行。C 的评价入口只需 NumPy 与 Pillow：
 
 ```text
-python -m pip install -r requirements.txt
+python -m pip install -e ".[analysis]"
 python -m unittest discover -s tests -v
 face-pixel-demo --output results/synthetic-demo
 ```
 
 demo 使用三个手工小掩膜，自动核对总计数 TP=3、FP=1、TN=9、FN=1、有效像素=14，并输出指标表与对照图。所有输出明确标记 **SYNTHETIC DEMO**，不能作为真实实验性能。每次运行使用新输出目录，避免覆盖结果。
+
+`analysis` 额外安装 OpenCV headless 与 Matplotlib，用于补充评估和作图；只调用原有像素评价函数时，最小依赖仍可通过 `requirements.txt` 安装。
 
 需要 OpenCV 和 Matplotlib 开发 A/B 模块时，可安装：
 
@@ -93,6 +96,14 @@ face-pixel-evaluate --manifest data/processed/part_a/split_manifest.csv --predic
 
 ## 公共目录与接入责任
 
+已有独立测试输出后，可直接生成报告插图和补充统计：
+
+```text
+face-pixel-visualize --manifest data/processed/part_a/split_manifest.csv --run results/independent-test --output results/visual-assessment
+```
+
+输出全部 32 张图的六宫格及透明抠图、代表样例总览、PNG/SVG 统计图、逐图 CSV 和分析 JSON。入口先核对原始测试输入哈希，不重新预测或调参。中文字体默认使用 Windows 微软雅黑或 Noto CJK，也可通过 `--font` 指定。
+
 ```text
 src/face_pixel/
   evaluation.py       # 已实现：B/C 共用的单图指标与汇总
@@ -101,6 +112,8 @@ src/face_pixel/
   demo.py             # 已实现：模拟样例生成与核对
   part_a.py           # 已实现：A 原始标签审计、脸部真值/有效区域转换
   part_b.py           # 已实现：B 固定验证复现、跨平台字节核查与独立测试
+  assessment.py       # 已实现：Boundary IoU 与按图像配对 Bootstrap
+  visualization.py    # 已实现：预测抠图、误差叠加与报告插图
 data/                 # A 维护数据说明与唯一划分
 configs/              # A 的统计、B 的固定配置，正式值待接入
 results/              # 运行结果，默认不提交

@@ -7,3 +7,5 @@ independent_test.json records immutable configurations, source hashes, environme
 case_analysis.json describes already fixed intermediate masks, without selecting new parameters. PNG case_path fields refer to the complete run directory included in the downloadable results archive; PNGs and original images are not duplicated in Git.
 
 Final test F1=0.7069326974722259, IoU=0.5467099014028634. Baseline test F1=0.6266214969531303, IoU=0.45626278230142453. Inference used fixed B code; evaluation used independent C ground truth.
+
+visual_assessment/ contains supplementary post-hoc boundary, image-level uncertainty and brightness-group descriptions of the same frozen predictions. These do not replace the original test or create a new independent benchmark. Figure PNG/SVG files are in the downloadable visualization package and can be regenerated with face-pixel-visualize.
