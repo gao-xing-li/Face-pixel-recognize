@@ -4,7 +4,7 @@
 
 项目以肤色统计模型为基础，在多幅图像上完成像素分割、结果展示与评价。优先使用 YCbCr 颜色空间和肤色均值、方差统计，先完成基础版本，再根据验证效果选择辅助处理。主要使用 Python、OpenCV、NumPy、Matplotlib。
 
-当前 C 分支已提供**共用评价模块与 Part A 数据适配层**。已接入 `feat/part-a` 的固定版本：162 对原图与多类标签、98/32/32 划分及正式肤色统计；完整数据核查和验证集接线检查通过。B 的检测、调参和固定方案尚待交接，当前没有正式分割性能结果。
+当前 C 分支已接通 **A 数据 → B 固定检测方案 → C 独立评价**。A 固定版本提供 162 对原图与标签及 98/32/32 划分；B 的基线与最终方案已在验证集完全复现，再对 32 张测试图独立评价。最终方案测试 F1=0.706933、IoU=0.546710；源数据、算法和参数未根据测试结果修改。
 
 ## 文档入口
 
@@ -14,6 +14,7 @@
 | [公共接口 v0.2](docs/interfaces.md) | 已实现评价接口、数据/预测清单、指标口径及 A/B 接入建议 |
 | [C 模块启动与交接](docs/C模块启动与交接.md) | C 当前可提供给 B 的内容、A/B 交接清单及后续工作 |
 | [Part A 接入核查与 B 接入方式](docs/PartA接入核查.md) | 固定数据版本、标签转换、真实数据核查结果及运行命令 |
+| [完整运行逻辑与独立测试](docs/完整运行逻辑与独立测试.md) | A/B/C 数据流、最终算法、运行入口、测试结果与失败案例 |
 | [分工方案对比与采纳说明](docs/分工方案对比与采纳说明.md) | 逐项说明两版差别、最终采用哪一部分及调整理由 |
 | [补充分工方案原文](docs/参考方案/补充分工方案.md) | 保留本次提供的另一版分工，供追溯对照 |
 
@@ -76,6 +77,14 @@ face-pixel-prepare-part-a --source-root ../part-a-source --source-revision 1389a
 
 ## 接入 B 的保存预测
 
+B 已在 `feat/part-b` 提供固定代码及配置。推荐使用 C 的完整复现入口，自动核对 B 源码字节与输入哈希，重建 B 冻结的数据视图，复现两套验证结果后才运行测试：
+
+```text
+face-pixel-test-part-b run --b-root ../part-b-source --b-python ../part-b-env/Scripts/python.exe --manifest data/processed/part_a/split_manifest.csv --output results/independent-test
+```
+
+B 副本固定为 `19e1d7409991c5896dfca9a6ef03694d2276a152`；其独立环境按 B 的锁定依赖安装，详见完整运行逻辑文档。B 与 C 保持独立副本，避免把额外模块放进 B 的冻结源码目录后使哈希失效。main 继续保留公共骨架，本分支提供 C 的整合运行入口及测试证据。
+
 ```text
 face-pixel-evaluate --manifest data/processed/part_a/split_manifest.csv --predictions results/final-test/predictions.csv --split test --config-id final-v1 --run-config configs/final_config.json --gt-encoding binary01 --pred-encoding binary255 --valid-encoding binary01 --output results/evaluation-final-test
 ```
@@ -91,6 +100,7 @@ src/face_pixel/
   batch.py, cli.py    # 已实现：保存预测的批量评价
   demo.py             # 已实现：模拟样例生成与核对
   part_a.py           # 已实现：A 原始标签审计、脸部真值/有效区域转换
+  part_b.py           # 已实现：B 固定验证复现、跨平台字节核查与独立测试
 data/                 # A 维护数据说明与唯一划分
 configs/              # A 的统计、B 的固定配置，正式值待接入
 results/              # 运行结果，默认不提交

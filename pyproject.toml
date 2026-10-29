@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "face-pixel-recognize"
-version = "0.2.0"
+version = "0.3.0"
 description = "Color-based skin segmentation: shared evaluation and experiment scaffold"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24", "Pillow>=10"]
@@ -16,6 +16,7 @@ detection = ["opencv-python>=4.8", "matplotlib>=3.7"]
 face-pixel-evaluate = "face_pixel.cli:main"
 face-pixel-demo = "face_pixel.demo:main"
 face-pixel-prepare-part-a = "face_pixel.part_a:main"
+face-pixel-test-part-b = "face_pixel.part_b:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

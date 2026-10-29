@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-29",
+  "status": "passed",
+  "c_unittest_count": 40,
+  "b_unittest_count": 36,
+  "note": "The two suites include shared evaluation tests; counts are not summed as independent coverage.",
+  "validation_replay": "Both frozen configurations reproduce published counts, global scores and image means before any test prediction",
+  "test_images": 32,
+  "algorithm_or_parameters_changed_after_test": false,
+  "dataset_byte_exports": "Raw datasets remain on A/B branches; C only publishes lightweight evidence."
+}
