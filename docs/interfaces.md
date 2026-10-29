@@ -1,6 +1,6 @@
-# 公共接口约定 v0.1
+# 公共接口约定 v0.3
 
-本约定随公共骨架发布到 main。数据集、正式标签和 A/B 算法尚待接入；检测接口是 B 的接入建议。评价接口已在 [C 开发分支](https://github.com/gao-xing-li/Face-pixel-recognize/tree/feat/c-evaluation-bootstrap) 实现，main 暂不包含其可运行代码；下文评价函数和命令在 C 分支（或合并后）使用。内部实现可以调整，跨模块语义变化需同步本文件。
+本约定对应 C 评价、A 数据适配及 B 固定方案的独立测试。B 的 `detect(image_bgr, params, config)` 已在其分支实现，C 通过独立进程运行该冻结版本，再使用自己派生的真值和评价程序计分。实际版本、运行顺序和结果见[完整运行逻辑](完整运行逻辑与独立测试.md)。内部实现可以调整，跨模块语义变化需同步本文件。
 
 ## 1. 架构与责任
 
@@ -16,11 +16,11 @@ A 数据及唯一划分 ──训练集──> A 统计参数
 B 验证与 C 测试共用 evaluate / summarize，使用相同指标口径。
 ```
 
-C 开发分支已实现 `src/face_pixel/evaluation.py`、`data_io.py`、`batch.py`、`cli.py` 和模拟样例 `demo.py`。A 后续可新增 `modeling.py`，B 后续可新增 `detection.py`、`validation.py` 和总入口；不预建会被误认为已完成的算法占位实现。
+当前已实现 `src/face_pixel/evaluation.py`、`data_io.py`、`batch.py`、`cli.py` 和模拟样例 `demo.py`。A 后续可新增 `modeling.py`，B 后续可新增 `detection.py`、`validation.py` 和总入口；不预建会被误认为已完成的算法占位实现。
 
 ## 2. 数据与标签
 
-- A 确定并记录正类是人体皮肤还是脸部皮肤，原始语义类别如何映射为正类。当前没有正式标签定义。
+- A 已在 Part A 固定版本中确定脸部正类 `{1,2,4,5,6,7,10,11,12}`、负类 `{0,8,9,13,14,15,16,17,18}`，忽略眼镜 `{3}`。肤色建模只使用 `{1,2}`。本分支按该定义转换，详见 [Part A 接入核查](PartA接入核查.md)；其他数据源仍需 A 明确映射。
 - 内部掩膜为 `(H, W)`、整数或布尔 0/1，1=约定正类，0=其他；评价函数拒绝浮点概率、255、负数及未知标签。
 - 原图、真值、预测、有效区域必须严格对齐。评价入口不自动缩放、阈值化、翻转或修正方向。
 - 有效区域 `valid_mask` 为同尺寸 0/1，1=计入评价，0=忽略。忽略位置的真值仍应填合法的 0/1 值。整张图全部忽略会报错，由 A/C 核查后记录排除，不静默丢弃。
@@ -31,7 +31,7 @@ C 开发分支已实现 `src/face_pixel/evaluation.py`、`data_io.py`、`batch.p
 
 ## 3. A 的唯一数据划分清单
 
-路径建议：`data/split_manifest.csv`；示例文件为 `data/split_manifest.example.csv`，其中只有虚构路径。
+本节描述评价入口接受的公共格式；示例文件 `data/split_manifest.example.csv` 只有虚构路径。A 当前原始清单与此格式不同，使用 Part A 适配命令后读取 `data/processed/part_a/split_manifest.csv`，不直接把原始多类标签交给二值评价函数。
 
 ```csv
 sample_id,image_path,mask_path,split,valid_mask_path

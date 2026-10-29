@@ -1,0 +1,274 @@
+{
+  "scope": "Post-hoc visualization and supplementary evaluation of fixed saved test predictions",
+  "n_images": 32,
+  "source_b_revision": "19e1d7409991c5896dfca9a6ef03694d2276a152",
+  "independent_test_sha256": "b2b6f9986c20070a2854724ed9269f116aa1ab3e4e16094450a13cf3b61e0341",
+  "manifest_sha256": "da0922889fb090b20f4badc9706bef24710a640996a0eefe9cd2e2e440319f8a",
+  "pixel_metrics": {
+    "baseline": {
+      "tp": 1652227,
+      "fp": 1470496,
+      "tn": 4767390,
+      "fn": 498495,
+      "n_valid": 8388608,
+      "accuracy": 0.7652779817581177,
+      "precision": 0.5290981620848215,
+      "recall": 0.7682196955255026,
+      "f1": 0.6266214969531303,
+      "iou": 0.45626278230142453
+    },
+    "final": {
+      "tp": 1624818,
+      "fp": 821271,
+      "tn": 5416615,
+      "fn": 525904,
+      "n_valid": 8388608,
+      "accuracy": 0.8394042253494263,
+      "precision": 0.6642513825130647,
+      "recall": 0.7554756030765483,
+      "f1": 0.7069326974722259,
+      "iou": 0.5467099014028634
+    }
+  },
+  "distributions": {
+    "baseline": {
+      "n_images": 32,
+      "mean_f1": 0.6283214531893845,
+      "median_f1": 0.6635261608382144,
+      "q25_f1": 0.49533106990983006,
+      "q75_f1": 0.7625928738589542,
+      "minimum_f1": 0.2729356906936079,
+      "maximum_f1": 0.9067809386850987,
+      "mean_boundary_iou": 0.15296469968470255,
+      "n_defined_boundary_iou": 32
+    },
+    "final": {
+      "n_images": 32,
+      "mean_f1": 0.6808034951147932,
+      "median_f1": 0.7775199403683516,
+      "q25_f1": 0.6276344524729836,
+      "q75_f1": 0.8715912720963584,
+      "minimum_f1": 0.031261476987263295,
+      "maximum_f1": 0.9299529443320369,
+      "mean_boundary_iou": 0.2327686345688373,
+      "n_defined_boundary_iou": 32
+    }
+  },
+  "image_comparison": {
+    "improved_f1": 27,
+    "declined_f1": 5,
+    "same_f1": 0
+  },
+  "boundary_policy": {
+    "dilation_ratio": 0.02,
+    "band_radius_pixels": [
+      14
+    ],
+    "aggregation": "unweighted image mean; undefined values excluded",
+    "ignored_region_extension": "exclude ignored pixels and their band-radius neighborhood"
+  },
+  "uncertainty": {
+    "global_f1": {
+      "method": "paired image bootstrap; percentile interval",
+      "confidence": 0.95,
+      "n_images": 32,
+      "n_resamples": 10000,
+      "n_defined_resamples": 10000,
+      "seed": 42,
+      "baseline_global_f1": {
+        "estimate": 0.6266214969531303,
+        "low": 0.5605320558346673,
+        "high": 0.6911969578183598
+      },
+      "final_global_f1": {
+        "estimate": 0.7069326974722259,
+        "low": 0.6133560089203749,
+        "high": 0.7853964025374456
+      },
+      "final_minus_baseline_global_f1": {
+        "estimate": 0.08031120051909557,
+        "low": 0.035711908460829195,
+        "high": 0.12001321010845681
+      }
+    },
+    "mean_image_f1_delta": {
+      "estimate": 0.05248204192540887,
+      "low": -0.006797551620373544,
+      "high": 0.10595268878242665,
+      "n_images": 32,
+      "n_resamples": 10000,
+      "confidence": 0.95,
+      "seed": 42,
+      "method": "paired image bootstrap; percentile interval"
+    }
+  },
+  "brightness_groups": [
+    {
+      "name": "较低亮度",
+      "n_images": 11,
+      "sample_ids": [
+        "face_segment_test_g2_00730",
+        "face_segment_test_g2_00745",
+        "face_segment_test_g2_00718",
+        "face_segment_test_g2_00609",
+        "face_segment_test_g2_00706",
+        "face_segment_test_g2_00723",
+        "face_segment_test_g2_00578",
+        "face_segment_test_g2_00583",
+        "face_segment_test_g2_00735",
+        "face_segment_test_g2_00537",
+        "face_segment_test_g2_00630"
+      ],
+      "min_face_mean_y": 103.8971173644475,
+      "max_face_mean_y": 150.88933034184038,
+      "baseline": {
+        "tp": 474372,
+        "fp": 436359,
+        "tn": 1680644,
+        "fn": 292209,
+        "n_valid": 2883584,
+        "accuracy": 0.7473394220525568,
+        "precision": 0.5208694993362475,
+        "recall": 0.6188152328325383,
+        "f1": 0.5656335851648352,
+        "iou": 0.3943438575490049
+      },
+      "final": {
+        "tp": 378343,
+        "fp": 287755,
+        "tn": 1829248,
+        "fn": 388238,
+        "n_valid": 2883584,
+        "accuracy": 0.7655719410289418,
+        "precision": 0.5679990031496867,
+        "recall": 0.4935460179680947,
+        "f1": 0.5281615770176012,
+        "iou": 0.3588448084860993
+      }
+    },
+    {
+      "name": "中间亮度",
+      "n_images": 11,
+      "sample_ids": [
+        "face_segment_test_g2_00676",
+        "face_segment_test_g2_00738",
+        "face_segment_test_g2_00715",
+        "face_segment_test_g2_00539",
+        "face_segment_test_g2_00685",
+        "face_segment_test_g2_00608",
+        "face_segment_test_g2_00613",
+        "face_segment_test_g2_00617",
+        "face_segment_test_g2_00561",
+        "face_segment_test_g2_00566",
+        "face_segment_test_g2_00598"
+      ],
+      "min_face_mean_y": 152.42254294693802,
+      "max_face_mean_y": 162.66739577119375,
+      "baseline": {
+        "tp": 580529,
+        "fp": 613722,
+        "tn": 1588515,
+        "fn": 100818,
+        "n_valid": 2883584,
+        "accuracy": 0.7522042014382102,
+        "precision": 0.4861030051471592,
+        "recall": 0.8520313437939846,
+        "f1": 0.6190335029148037,
+        "iou": 0.4482610579050228
+      },
+      "final": {
+        "tp": 614138,
+        "fp": 344905,
+        "tn": 1857332,
+        "fn": 67209,
+        "n_valid": 2883584,
+        "accuracy": 0.8570827137340199,
+        "precision": 0.6403654476389484,
+        "recall": 0.9013586322387858,
+        "f1": 0.748770719158249,
+        "iou": 0.598428066400845
+      }
+    },
+    {
+      "name": "较高亮度",
+      "n_images": 10,
+      "sample_ids": [
+        "face_segment_test_g2_00538",
+        "face_segment_test_g2_00585",
+        "face_segment_test_g2_00530",
+        "face_segment_test_g2_00734",
+        "face_segment_test_g2_00675",
+        "face_segment_test_g2_00629",
+        "face_segment_test_g2_00559",
+        "face_segment_test_g2_00610",
+        "face_segment_test_g2_00647",
+        "face_segment_test_g2_00570"
+      ],
+      "min_face_mean_y": 162.69927078064407,
+      "max_face_mean_y": 204.97958291817434,
+      "baseline": {
+        "tp": 597326,
+        "fp": 420415,
+        "tn": 1498231,
+        "fn": 105468,
+        "n_valid": 2621440,
+        "accuracy": 0.7993915557861329,
+        "precision": 0.5869135664181752,
+        "recall": 0.849930420578434,
+        "f1": 0.6943491414007852,
+        "iou": 0.5318030749397485
+      },
+      "final": {
+        "tp": 632337,
+        "fp": 188611,
+        "tn": 1730035,
+        "fn": 70457,
+        "n_valid": 2621440,
+        "accuracy": 0.9011734008789063,
+        "precision": 0.7702521962414185,
+        "recall": 0.8997472943707544,
+        "f1": 0.8299790909484677,
+        "iou": 0.7093711612566679
+      }
+    }
+  ],
+  "selected_examples": [
+    {
+      "role": "F1 最高",
+      "sample_id": "face_segment_test_g2_00610"
+    },
+    {
+      "role": "最接近中位数 / F1 提升最多",
+      "sample_id": "face_segment_test_g2_00570"
+    },
+    {
+      "role": "F1 下降最多",
+      "sample_id": "face_segment_test_g2_00609"
+    },
+    {
+      "role": "Precision 最低",
+      "sample_id": "face_segment_test_g2_00718"
+    }
+  ],
+  "limitations": [
+    "Supplementary metrics and subgroups were chosen after seeing the original test results; they are descriptive, not a new independent benchmark",
+    "Image-bootstrap intervals describe resampling variability within these 32 selected images, not guaranteed population coverage",
+    "Pixel brightness is not a verified illumination condition or demographic label; brightness groups do not establish causality",
+    "No new inference, model selection or parameter changes were performed"
+  ],
+  "references": {
+    "boundary_iou_paper": "https://openaccess.thecvf.com/content/CVPR2021/html/Cheng_Boundary_IoU_Improving_Object-Centric_Image_Segmentation_Evaluation_CVPR_2021_paper.html",
+    "boundary_iou_reference": "https://github.com/bowenc0221/boundary-iou-api/blob/master/boundary_iou/utils/boundary_utils.py",
+    "paired_bootstrap": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html"
+  },
+  "runtime_versions": {
+    "numpy": "2.5.4",
+    "Pillow": "13.0.0",
+    "opencv": "4.14.0",
+    "matplotlib": "3.11.2"
+  },
+  "analysis_source_sha256": {
+    "assessment.py": "4c8806c7d6cfc074ec420e29200bfebdcab890300a70a6f7e33387477e6c9083",
+    "visualization.py": "f4ea754c33b07acd9033b0e83d91e0c184ec902e1e7cda872bfff1429f3b7709"
+  }
+}
