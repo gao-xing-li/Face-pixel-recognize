@@ -1,1 +1,5 @@
-"""Part A skin statistics; detector/evaluator integration is deferred."""
+"""Shared tools for the color-based skin segmentation experiment."""
+
+from .evaluation import evaluate, summarize
+
+__all__ = ["evaluate", "summarize"]
