@@ -1,0 +1,4 @@
+sample_id,image_path,mask_path,split,valid_mask_path
+sample_001,raw/images/sample_001.jpg,processed/masks/sample_001.png,train,
+sample_002,raw/images/sample_002.jpg,processed/masks/sample_002.png,validation,
+sample_003,raw/images/sample_003.jpg,processed/masks/sample_003.png,test,processed/valid/sample_003.png

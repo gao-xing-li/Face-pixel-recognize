@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+build/
+dist/
+.DS_Store
+Thumbs.db
+data/raw/
+data/processed/
+results/*
+!results/README.md
+work/
