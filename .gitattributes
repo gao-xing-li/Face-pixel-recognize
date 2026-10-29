@@ -1,0 +1,7 @@
+* text=auto
+*.png binary
+*.npz binary
+# Provenance hashes refer to exact bytes; preserve them across Git checkouts.
+*.csv -text
+*.json -text
+/src/face_pixel/modeling.py -text

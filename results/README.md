@@ -1,5 +1,3 @@
-# 实验结果
+# Part A 结果
 
-每个配置、每个集合使用独立运行目录，结果不覆盖已有目录。批量评价输出 `summary.json`、`per_image.csv`、配置快照（如提供）及案例图，格式见 [公共接口](../docs/interfaces.md)。
-
-本目录下运行生成的内容默认不入库。正式可分享结果由 B/C 选择并显式加入，记录配置和数据版本。demo 结果只是模拟掩膜的正确性检查，不是项目正式性能。
+统计成果 skin_statistics/ 随 Git 提交。data_review/ 和 split_review/ 为本地生成的人工检查材料，默认忽略，可由 tools 中对应脚本重建。

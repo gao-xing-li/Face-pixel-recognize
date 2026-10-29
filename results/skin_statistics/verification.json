@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "training_images": 98,
+  "selected_pixels": 6387552,
+  "method": "Pillow RGB read, COLOR_RGB2YCrCb, concatenate all selected train pixels, direct NumPy mean/var/std; independent np.add.at joint counts",
+  "absolute_parameter_differences": {
+    "mean_cr": 0.0,
+    "variance_cr": 0.0,
+    "std_cr": 0.0,
+    "mean_cb": 0.0,
+    "variance_cb": 0.0,
+    "std_cb": 0.0
+  },
+  "tolerance": 1e-10,
+  "training_ids_match": true,
+  "no_validation_or_test_samples": true,
+  "per_image_and_histogram_counts_match": true,
+  "source_hashes_match": true,
+  "parameter_file_sha256": "66219e403e334f6830d95cf1151f371c06ebaf62535e88b89d0ef1dd5959d3ac",
+  "manifest_sha256": "006132d1c8f59804e6883337ea57aa2c07b56b0c64fb410be5d23455262fb918"
+}
