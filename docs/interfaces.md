@@ -1,6 +1,6 @@
 # 公共接口约定 v0.1
 
-本约定随公共骨架发布到 main。数据集、正式标签和 A/B 算法尚待接入；检测接口是 B 的接入建议。评价接口已在 [C 开发分支](https://github.com/gao-xing-li/Face-pixel-recognize/tree/feat/c-evaluation-bootstrap) 实现，main 暂不包含其可运行代码；下文评价函数和命令在 C 分支（或合并后）使用。内部实现可以调整，跨模块语义变化需同步本文件。
+本约定对应首次公共骨架与 C 评价模块。数据集、正式标签和 A/B 算法尚待接入；下述检测接口是 B 的接入建议，评价接口已经实现。内部实现可以调整，跨模块语义变化需同步本文件。
 
 ## 1. 架构与责任
 
@@ -16,7 +16,7 @@ A 数据及唯一划分 ──训练集──> A 统计参数
 B 验证与 C 测试共用 evaluate / summarize，使用相同指标口径。
 ```
 
-C 开发分支已实现 `src/face_pixel/evaluation.py`、`data_io.py`、`batch.py`、`cli.py` 和模拟样例 `demo.py`。A 后续可新增 `modeling.py`，B 后续可新增 `detection.py`、`validation.py` 和总入口；不预建会被误认为已完成的算法占位实现。
+当前已实现 `src/face_pixel/evaluation.py`、`data_io.py`、`batch.py`、`cli.py` 和模拟样例 `demo.py`。A 后续可新增 `modeling.py`，B 后续可新增 `detection.py`、`validation.py` 和总入口；不预建会被误认为已完成的算法占位实现。
 
 ## 2. 数据与标签
 
