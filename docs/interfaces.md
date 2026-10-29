@@ -1,6 +1,6 @@
 # 公共接口约定 v0.1
 
-本约定对应首次公共骨架与 C 评价模块。数据集、正式标签和 A/B 算法尚待接入；下述检测接口是 B 的接入建议，评价接口已经实现。内部实现可以调整，跨模块语义变化需同步本文件。
+本地 B 集成分支已基于 main 公共骨架接入 A 的正式数据与 C 的评价实现。当前实际入口见 [Part B 交接说明](PartB交接说明.md)。下列公共评价约定继续有效：零分母为 null；检测接口只接受图像、模型和配置。A 的原始清单与公共清单格式不同，通过可追溯派生视图适配，不修改样本或划分。
 
 ## 1. 架构与责任
 
@@ -16,11 +16,11 @@ A 数据及唯一划分 ──训练集──> A 统计参数
 B 验证与 C 测试共用 evaluate / summarize，使用相同指标口径。
 ```
 
-当前已实现 `src/face_pixel/evaluation.py`、`data_io.py`、`batch.py`、`cli.py` 和模拟样例 `demo.py`。A 后续可新增 `modeling.py`，B 后续可新增 `detection.py`、`validation.py` 和总入口；不预建会被误认为已完成的算法占位实现。
+当前已实现 `src/face_pixel/evaluation.py`、`data_io.py`、`batch.py`、`cli.py` 和模拟样例 `demo.py`。A 已提供 `modeling.py`，B 已提供 `b_data.py`、`detection.py`、`validation.py` 和 `face-pixel-b` 入口。
 
 ## 2. 数据与标签
 
-- A 确定并记录正类是人体皮肤还是脸部皮肤，原始语义类别如何映射为正类。当前没有正式标签定义。
+- A 已确定：建模只使用标签 1、2；脸部评价正类为 1、2、4、5、6、7、10、11、12；标签 3（眼镜）忽略，其余为负类。推理不得读取标签或忽略掩膜。
 - 内部掩膜为 `(H, W)`、整数或布尔 0/1，1=约定正类，0=其他；评价函数拒绝浮点概率、255、负数及未知标签。
 - 原图、真值、预测、有效区域必须严格对齐。评价入口不自动缩放、阈值化、翻转或修正方向。
 - 有效区域 `valid_mask` 为同尺寸 0/1，1=计入评价，0=忽略。忽略位置的真值仍应填合法的 0/1 值。整张图全部忽略会报错，由 A/C 核查后记录排除，不静默丢弃。
@@ -31,7 +31,7 @@ B 验证与 C 测试共用 evaluate / summarize，使用相同指标口径。
 
 ## 3. A 的唯一数据划分清单
 
-路径建议：`data/split_manifest.csv`；示例文件为 `data/split_manifest.example.csv`，其中只有虚构路径。
+唯一源清单仍为 A 的 `data/split_manifest.csv`：使用 `label_path`、`val` 和项目根目录相对路径。运行 `face-pixel-b prepare` 后，公共评价读取 `data/processed/part_b/manifest.csv`，并将 `val` 机械映射为 `validation`。派生视图保留全部 ID 和集合归属，`adapter.json` 记录源/派生哈希和逐项映射。下面是公共格式示例，并非 A 源清单格式；`data/split_manifest.example.csv` 中为虚构路径。
 
 ```csv
 sample_id,image_path,mask_path,split,valid_mask_path
@@ -124,7 +124,7 @@ sample_003,predictions/sample_003.png
 路径相对于预测清单目录。它必须与本次选定集合的 ID 完全一致，不能缺少样本或混入其他集合。文件使用无损二值 PNG，B 说明保存编码。每次运行给定 `config_id`，基础版和最终版分别输出、分别评价。
 
 ```text
-face-pixel-evaluate --manifest data/split_manifest.csv --predictions results/final-test/predictions.csv --split test --config-id final-v1 --run-config configs/final_config.json --gt-encoding binary255 --pred-encoding binary255 --output results/evaluation-final-test
+face-pixel-evaluate --manifest data/processed/part_b/manifest.csv --predictions results/final-test/predictions.csv --split test --config-id part-b-v1-final --run-config configs/final_config.json --gt-encoding binary255 --pred-encoding binary255 --valid-encoding binary255 --output results/evaluation-final-test
 ```
 
 示例命令中的编码须按实际数据修改。默认编码为 `binary01`。有有效区域文件时再按实际情况指定 `--valid-encoding`。B 在验证集调用同一入口，将 `--split` 改为 `validation` 并使用对应预测清单。
