@@ -1,0 +1,16 @@
+{
+  "criterion": "Figures should add spatial patterns, parameter curves, sample distributions or uncertainty beyond tables. Pure numerical duplicates are removed.",
+  "user_examples": "原表9和图8重复，原图12可去掉，原图9保留。",
+  "removed_original_figures": {
+    "2": "阶段变化，全部数值已在表7",
+    "7": "误检类别计数，统一放入表8",
+    "8": "分组召回率，已在表9",
+    "12": "亮度分组F1，已在表11"
+  },
+  "retained_original_figure_9": "逐图F1散点与累积分布，展示均值和中位数以外的信息",
+  "original_figure_10": "只保留逐图边界分布，删除由混淆计数表换算的重复柱状图",
+  "four_case_comparisons_preserved": true,
+  "report_figures": 8,
+  "fp_table_rows": 8,
+  "previous_figures_preserved_locally": true
+}
