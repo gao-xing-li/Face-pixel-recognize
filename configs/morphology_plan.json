@@ -1,0 +1,26 @@
+{
+  "split": "validation",
+  "metric": "global.recall_with_f1_budget",
+  "max_f1_drop": 0.01,
+  "k_values": [
+    1.25
+  ],
+  "postprocess_values": [
+    "none",
+    "largest_fill",
+    "close_largest_fill",
+    "largest_close_fill",
+    "largest_dilate_fill_erode"
+  ],
+  "closing_kernel": 5,
+  "kernel_values": [
+    5,
+    9,
+    15,
+    21,
+    31,
+    41
+  ],
+  "prior_test_feedback": true,
+  "feedback_sample_id": "face_segment_test_g2_00570"
+}

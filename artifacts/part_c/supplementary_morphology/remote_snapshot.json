@@ -1,0 +1,74 @@
+{
+  "revision": "40e7b48439e6eb95ba1825ea8c76ff391f2fc5a1",
+  "retrieved_via": "GitHub connector; verified Git blob hashes",
+  "files": [
+    {
+      "path": "artifacts/part_b_morphology_v2/candidates.csv",
+      "git_sha": "357c4bf5513c5328dccf1bbdf8546b81c921b8b2"
+    },
+    {
+      "path": "artifacts/part_b_morphology_v2/validation/summary.json",
+      "git_sha": "fa46804cbba766eec3ac5cabeaf41f1eb2eff5a3"
+    },
+    {
+      "path": "artifacts/part_b_morphology_v2/validation_candidates/candidate_01/summary.json",
+      "git_sha": "99b9a2e4d31478cd45fe72f2563f7bbc70865709"
+    },
+    {
+      "path": "configs/final_config.json",
+      "git_sha": "05b2cb1a288c396d54a0dcd7123f8e01b204f001"
+    },
+    {
+      "path": "configs/morphology_plan.json",
+      "git_sha": "ee6455370b56824ee02c5c198676684610cff7b0"
+    },
+    {
+      "path": "configs/morphology_reference.json",
+      "git_sha": "3161b785ae7aaba48cc54bad1d505e7601a5328d"
+    },
+    {
+      "path": "src/face_pixel/__init__.py",
+      "git_sha": "5bdd47ccbaedef2f91b004f5dedb4ebc5c0e8d30"
+    },
+    {
+      "path": "src/face_pixel/b_data.py",
+      "git_sha": "14a0b54a8324847c90d3810e5660d00ee7202d80"
+    },
+    {
+      "path": "src/face_pixel/batch.py",
+      "git_sha": "ee3ae247dfbcc4101d6f4433f93f819c7f332f91"
+    },
+    {
+      "path": "src/face_pixel/cli.py",
+      "git_sha": "576850f9b4a752ec3c83c79902a7afa2c7087eb5"
+    },
+    {
+      "path": "src/face_pixel/data_io.py",
+      "git_sha": "0612c735f008ec2740ffb5fcaa58d2bff6d10fe1"
+    },
+    {
+      "path": "src/face_pixel/demo.py",
+      "git_sha": "ed56daaf64470eb299f050bbd92d9e8d51b7c71d"
+    },
+    {
+      "path": "src/face_pixel/detection.py",
+      "git_sha": "6c0d9e5011d8f0c497bbe7ce95ee9e3ccdad3188"
+    },
+    {
+      "path": "src/face_pixel/evaluation.py",
+      "git_sha": "263d3719ea547c103c532b6cccdd2d99b2bfad5f"
+    },
+    {
+      "path": "src/face_pixel/modeling.py",
+      "git_sha": "47bb9656b0a936220f05e919d4321733a556a0c7"
+    },
+    {
+      "path": "src/face_pixel/part_a_common.py",
+      "git_sha": "cbf11798edf4afbb0ef1a88986902aaa6133a08c"
+    },
+    {
+      "path": "src/face_pixel/validation.py",
+      "git_sha": "688cadf5a6c9a2dba5a3f0dac1cc417ba05ddd17"
+    }
+  ]
+}

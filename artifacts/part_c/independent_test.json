@@ -1,0 +1,213 @@
+{
+  "status": "passed",
+  "scope": "independent fixed-configuration validation replay and test evaluation",
+  "b_revision": "19e1d7409991c5896dfca9a6ef03694d2276a152",
+  "b_algorithm_revision": "dc87b4b2ab90dbe4eabefaee1140c9dcc9dabf4b",
+  "a_source": {
+    "repository": "gao-xing-li/Face-pixel-recognize",
+    "branch": "feat/part-a",
+    "revision": "1389a77158ab484dbdbbbb4e4e2f4d1c46a9625b",
+    "git_revision_verified": true,
+    "manifest_sha256": "006132d1c8f59804e6883337ea57aa2c07b56b0c64fb410be5d23455262fb918",
+    "metadata_sha256": "e8570b2016f1b4720448cc187ccf837ae9b57c392cf7a223b7a03187ba2765ee",
+    "split_report_sha256": "420ebeb5623f54c418e6c2b81c4d14b28a909c0a32b9e416caee50953ed5a1f2",
+    "skin_params_sha256": "66219e403e334f6830d95cf1151f371c06ebaf62535e88b89d0ef1dd5959d3ac",
+    "content_fingerprint": "234af0a445a47d0e9301dc4dd6f82225237f0c6551c445cace57906ae673a59e"
+  },
+  "normalized_content_fingerprint": "1681e3ac3dbd95d5c33165222adb4aee3752e1a9e0e1a237154e7fdf78122dd6",
+  "c_manifest_sha256": "da0922889fb090b20f4badc9706bef24710a640996a0eefe9cd2e2e440319f8a",
+  "b_config_sha256": {
+    "baseline": "48255395f1e92088f90b3bb7f31b28427d9af821fa68b3deb547dac028185ed5",
+    "final": "d0c21b0b527570ef5164173f16e7c8833bd10b3327fac56ff4982b84c9018005"
+  },
+  "b_source_sha256": {
+    "__init__.py": "4d13910f86e5f7d716575d3f8fb921f702f8c4551d143138283194ff069ec8ce",
+    "b_data.py": "d49c210df3329bdcf0f4a476dfe5345fbaead95fc8ca8208737ea938d02a0fa4",
+    "batch.py": "fa7dfe25023305c0c00895bb628e3b659381a836f877deedc2e4fa3413bdaee6",
+    "cli.py": "351c459d3a714cfa7c08e9c6a3f69525b7b58657d223dbc860801ba78391f576",
+    "data_io.py": "9d64c40c34c5a171dc882c99fea38b863c21d2b42552fb3efa2fe63b1a4f2aa9",
+    "demo.py": "fdef4efc64837fad3bd9a682907931708a09fdd5fce700f9120c5282868de817",
+    "detection.py": "fb3fef1117baa7066c8c676afdef57326a4b0d153a93d9da8599e8e7e4d4461e",
+    "evaluation.py": "94fcac10ba3b1bc5d64bc314f915172b56dce305d4bfca95d881155afe35814e",
+    "modeling.py": "ab45dd8044a9506dbe58d46858cae5a61db21873b934141af65551096d72c395",
+    "part_a_common.py": "f8aa2f0aa36fec8784cd3b2b4fad1996fe3bfbf8c7f19a32659f9a12cb276cce",
+    "validation.py": "9e487b2fd476823688cd67ea71fa73cb85b59feceab9f454d08b40dbbdfc90bf"
+  },
+  "c_source_sha256": {
+    "batch.py": "7b211f5b0b84f7d7f1d1ba4d2c6f26ebf203c4593f03acfab264ff9b58120fe4",
+    "cli.py": "351c459d3a714cfa7c08e9c6a3f69525b7b58657d223dbc860801ba78391f576",
+    "data_io.py": "9d64c40c34c5a171dc882c99fea38b863c21d2b42552fb3efa2fe63b1a4f2aa9",
+    "demo.py": "fdef4efc64837fad3bd9a682907931708a09fdd5fce700f9120c5282868de817",
+    "evaluation.py": "94fcac10ba3b1bc5d64bc314f915172b56dce305d4bfca95d881155afe35814e",
+    "part_a.py": "c4887879435d785ffba6a665fca5b9f48e3458c696aaf75cb47b0ed601558e1b",
+    "part_b.py": "46309570efa83dbc97940525c8ae90591bf492065dad6b7d00efc6466bd4c111",
+    "__init__.py": "4d13910f86e5f7d716575d3f8fb921f702f8c4551d143138283194ff069ec8ce"
+  },
+  "checkout_newline_restorations": [
+    "__init__.py",
+    "b_data.py",
+    "batch.py",
+    "cli.py",
+    "data_io.py",
+    "demo.py",
+    "detection.py",
+    "evaluation.py",
+    "part_a_common.py",
+    "validation.py"
+  ],
+  "validation_replay": {
+    "baseline": "exact counts and metrics match B's published validation",
+    "final": "exact counts and metrics match B's published validation"
+  },
+  "b_runtime": {
+    "python": "3.12.14",
+    "opencv": "4.14.0",
+    "numpy": "2.5.4"
+  },
+  "c_runtime": {
+    "numpy": "2.3.5",
+    "Pillow": "12.3.0"
+  },
+  "results": {
+    "validation-baseline": {
+      "n_images": 32,
+      "global": {
+        "tp": 1645235,
+        "fp": 1682619,
+        "tn": 4477867,
+        "fn": 582887,
+        "n_valid": 8388608,
+        "accuracy": 0.7299306392669678,
+        "precision": 0.4943831670499968,
+        "recall": 0.7383953840947668,
+        "f1": 0.592239779293503,
+        "iou": 0.4206964869317605
+      },
+      "image_mean": {
+        "accuracy": 0.7299306392669678,
+        "precision": 0.5252225541327669,
+        "recall": 0.7276931873146182,
+        "f1": 0.595316329685887,
+        "iou": 0.45946432919205893
+      },
+      "image_mean_n_defined": {
+        "accuracy": 32,
+        "precision": 32,
+        "recall": 32,
+        "f1": 32,
+        "iou": 32
+      }
+    },
+    "validation-final": {
+      "n_images": 32,
+      "global": {
+        "tp": 1842674,
+        "fp": 998367,
+        "tn": 5162119,
+        "fn": 385448,
+        "n_valid": 8388608,
+        "accuracy": 0.8350363969802856,
+        "precision": 0.6485911326165303,
+        "recall": 0.8270076773174898,
+        "f1": 0.7270131183392603,
+        "iou": 0.5711080992372823
+      },
+      "image_mean": {
+        "accuracy": 0.8350363969802856,
+        "precision": 0.67005675370805,
+        "recall": 0.8105627724806526,
+        "f1": 0.7067461494559121,
+        "iou": 0.5970627077348961
+      },
+      "image_mean_n_defined": {
+        "accuracy": 32,
+        "precision": 32,
+        "recall": 32,
+        "f1": 32,
+        "iou": 32
+      }
+    },
+    "test-baseline": {
+      "n_images": 32,
+      "global": {
+        "tp": 1652227,
+        "fp": 1470496,
+        "tn": 4767390,
+        "fn": 498495,
+        "n_valid": 8388608,
+        "accuracy": 0.7652779817581177,
+        "precision": 0.5290981620848215,
+        "recall": 0.7682196955255026,
+        "f1": 0.6266214969531303,
+        "iou": 0.45626278230142453
+      },
+      "image_mean": {
+        "accuracy": 0.7652779817581177,
+        "precision": 0.5822597107036069,
+        "recall": 0.767230549945563,
+        "f1": 0.6283214531893845,
+        "iou": 0.4818175225423213
+      },
+      "image_mean_n_defined": {
+        "accuracy": 32,
+        "precision": 32,
+        "recall": 32,
+        "f1": 32,
+        "iou": 32
+      }
+    },
+    "test-final": {
+      "n_images": 32,
+      "global": {
+        "tp": 1624818,
+        "fp": 821271,
+        "tn": 5416615,
+        "fn": 525904,
+        "n_valid": 8388608,
+        "accuracy": 0.8394042253494263,
+        "precision": 0.6642513825130647,
+        "recall": 0.7554756030765483,
+        "f1": 0.7069326974722259,
+        "iou": 0.5467099014028634
+      },
+      "image_mean": {
+        "accuracy": 0.8394042253494263,
+        "precision": 0.7265922384362009,
+        "recall": 0.7547310306004074,
+        "f1": 0.6808034951147933,
+        "iou": 0.5717793697392268
+      },
+      "image_mean_n_defined": {
+        "accuracy": 32,
+        "precision": 32,
+        "recall": 32,
+        "f1": 32,
+        "iou": 32
+      }
+    }
+  },
+  "final_minus_baseline": {
+    "validation": {
+      "accuracy": 0.10510575771331787,
+      "precision": 0.15420796556653354,
+      "recall": 0.08861229322272302,
+      "f1": 0.13477333904575728,
+      "iou": 0.15041161230552186
+    },
+    "test": {
+      "accuracy": 0.0741262435913086,
+      "precision": 0.13515322042824318,
+      "recall": -0.012744092448954358,
+      "f1": 0.08031120051909557,
+      "iou": 0.09044711910143882
+    }
+  },
+  "configuration_changed_after_test": false,
+  "limitations": [
+    "No identity or exhaustive near-duplicate verification",
+    "Appearance-based source selection is not verified demographic annotation",
+    "Raw labels were audited structurally; no new manual per-pixel quality approval",
+    "Largest-component postprocessing assumes a single dominant face region; not validated for multiple faces",
+    "Results apply to this fixed, appearance-selected 32-image test split"
+  ]
+}

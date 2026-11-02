@@ -1,13 +1,5 @@
-# 源码接入位置
+# 实验代码
 
-公共骨架使用 src 布局，Python 包名建议为 face_pixel。main 当前只提供目录与接口约定，负责人后续提交实际实现。
+modeling 统计训练颜色，dataset 转换真值，detection 实现分割，validation 选择参数和保存预测，evaluation 计算指标，batch 批量评价，experiment 连接整个流程，visualization 与 assessment 展示效果和补充统计。
 
-| 建议模块 | 负责人 | 内容 |
-| --- | --- | --- |
-| modeling.py | A | 数据统计、肤色建模及正式参数 |
-| detection.py | B | 预处理、阈值检测和实际采用的辅助处理 |
-| validation.py / 整合入口 | B | 验证选参、固定配置、完整运行入口 |
-| evaluation.py | C，供 B/C 共用 | 单图混淆计数、指标及多图汇总 |
-| data_io.py / batch.py / cli.py | 共用接入，C 首次提供 | 清单读取、保存预测评价与结果导出 |
-
-文件名可以调整，跨模块接口保持 [公共约定](../../docs/interfaces.md) 一致。C 分支已有评价包及安装配置，B 合并时统一处理，避免各自重复建立不兼容的安装入口。
+日常运行从 experiment.py 开始，算法原理从 detection.py 和 evaluation.py 开始阅读。

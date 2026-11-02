@@ -1,0 +1,201 @@
+{
+  "scope": "supplementary post-development comparison on original test split",
+  "independent_test_claim": false,
+  "prior_test_feedback": true,
+  "feedback_sample_id": "face_segment_test_g2_00570",
+  "detector_revision": "40e7b48439e6eb95ba1825ea8c76ff391f2fc5a1",
+  "original_revision": "19e1d7409991c5896dfca9a6ef03694d2276a152",
+  "manifest_sha256": "da0922889fb090b20f4badc9706bef24710a640996a0eefe9cd2e2e440319f8a",
+  "configs_sha256": {
+    "v1": "c62adf481aa37212664ffaeed824d9f450e91d88baa7b8d6a7d4c5305cff34ba",
+    "v2": "239c9849d6779b65a7559c132534a33093a84882c246fe442d58eaf868fde994"
+  },
+  "source_sha256": {
+    "__init__.py": "4d13910f86e5f7d716575d3f8fb921f702f8c4551d143138283194ff069ec8ce",
+    "b_data.py": "d49c210df3329bdcf0f4a476dfe5345fbaead95fc8ca8208737ea938d02a0fa4",
+    "batch.py": "fa7dfe25023305c0c00895bb628e3b659381a836f877deedc2e4fa3413bdaee6",
+    "cli.py": "351c459d3a714cfa7c08e9c6a3f69525b7b58657d223dbc860801ba78391f576",
+    "data_io.py": "9d64c40c34c5a171dc882c99fea38b863c21d2b42552fb3efa2fe63b1a4f2aa9",
+    "demo.py": "fdef4efc64837fad3bd9a682907931708a09fdd5fce700f9120c5282868de817",
+    "detection.py": "5febd0a700c5953638048a845d6adae34356680f30c1ee58b426999747f40b58",
+    "evaluation.py": "94fcac10ba3b1bc5d64bc314f915172b56dce305d4bfca95d881155afe35814e",
+    "modeling.py": "ab45dd8044a9506dbe58d46858cae5a61db21873b934141af65551096d72c395",
+    "part_a_common.py": "f8aa2f0aa36fec8784cd3b2b4fad1996fe3bfbf8c7f19a32659f9a12cb276cce",
+    "validation.py": "171048c0e1c7b2c21b4a2b0abc32564c47f670c5d5ee988647aec5da5b7024d4"
+  },
+  "runtime": {
+    "python": "3.12.14",
+    "opencv": "4.14.0",
+    "numpy": "2.5.4"
+  },
+  "view_check": {
+    "status": "passed",
+    "images": 162,
+    "manifest_sha256": "399522d28953a62be90be7081e05d658d5d56c35069753c1977e8791cd945feb",
+    "adapter_sha256": "90ce91913b9cf66f7616675ca9e1d3d03189bd24b0c622bea72896a5d79e7d27",
+    "b_c_truth_pixel_equality": true,
+    "frozen_bytes_reproduced": true
+  },
+  "validation_replay": "exact counts and metrics match published reference and updated validation",
+  "v1_prediction_pixel_equality": {
+    "validation": 32,
+    "test": 32
+  },
+  "configuration_changed_after_evaluation": false,
+  "results": {
+    "validation-v1": {
+      "n_images": 32,
+      "global": {
+        "tp": 1842674,
+        "fp": 998367,
+        "tn": 5162119,
+        "fn": 385448,
+        "n_valid": 8388608,
+        "accuracy": 0.8350363969802856,
+        "precision": 0.6485911326165303,
+        "recall": 0.8270076773174898,
+        "f1": 0.7270131183392603,
+        "iou": 0.5711080992372823
+      },
+      "image_mean": {
+        "accuracy": 0.8350363969802856,
+        "precision": 0.67005675370805,
+        "recall": 0.8105627724806526,
+        "f1": 0.7067461494559121,
+        "iou": 0.5970627077348961
+      }
+    },
+    "validation-v2": {
+      "n_images": 32,
+      "global": {
+        "tp": 1921197,
+        "fp": 1189003,
+        "tn": 4971483,
+        "fn": 306925,
+        "n_valid": 8388608,
+        "accuracy": 0.8216714859008789,
+        "precision": 0.6177085074914797,
+        "recall": 0.8622494638982964,
+        "f1": 0.7197756148842277,
+        "iou": 0.5622261403958005
+      },
+      "image_mean": {
+        "accuracy": 0.8216714859008789,
+        "precision": 0.6490064972574914,
+        "recall": 0.8461976170666804,
+        "f1": 0.7104735737081969,
+        "iou": 0.6009070126034372
+      }
+    },
+    "test-v1": {
+      "n_images": 32,
+      "global": {
+        "tp": 1624818,
+        "fp": 821271,
+        "tn": 5416615,
+        "fn": 525904,
+        "n_valid": 8388608,
+        "accuracy": 0.8394042253494263,
+        "precision": 0.6642513825130647,
+        "recall": 0.7554756030765483,
+        "f1": 0.7069326974722259,
+        "iou": 0.5467099014028634
+      },
+      "image_mean": {
+        "accuracy": 0.8394042253494263,
+        "precision": 0.7265922384362009,
+        "recall": 0.7547310306004074,
+        "f1": 0.6808034951147933,
+        "iou": 0.5717793697392268
+      }
+    },
+    "test-v2": {
+      "n_images": 32,
+      "global": {
+        "tp": 1710868,
+        "fp": 977980,
+        "tn": 5259906,
+        "fn": 439854,
+        "n_valid": 8388608,
+        "accuracy": 0.8309810161590576,
+        "precision": 0.6362828988473874,
+        "recall": 0.7954854230346833,
+        "f1": 0.7070330628547578,
+        "iou": 0.5468299633522145
+      },
+      "image_mean": {
+        "accuracy": 0.8309810161590576,
+        "precision": 0.7096889855992883,
+        "recall": 0.7997753531567716,
+        "f1": 0.6897296673304655,
+        "iou": 0.5814290459739996
+      }
+    }
+  },
+  "test_delta": {
+    "tp": 86050,
+    "fp": 156709,
+    "tn": -156709,
+    "fn": -86050,
+    "n_valid": 0,
+    "accuracy": -0.008423209190368652,
+    "precision": -0.02796848366567728,
+    "recall": 0.04000981995813502,
+    "f1": 0.0001003653825318862,
+    "iou": 0.00012006194935110237
+  },
+  "image_f1_changes": {
+    "improved": 19,
+    "declined": 13,
+    "unchanged": 0
+  },
+  "boundary_iou": {
+    "v1": 0.2327686345688373,
+    "v2": 0.22669754013781385
+  },
+  "pixel_changes": {
+    "added_tp": 86050,
+    "added_fp": 156709,
+    "removed_tp": 0,
+    "removed_fp": 0
+  },
+  "bootstrap_global_f1": {
+    "method": "paired image bootstrap; percentile interval",
+    "confidence": 0.95,
+    "n_images": 32,
+    "n_resamples": 10000,
+    "n_defined_resamples": 10000,
+    "seed": 42,
+    "baseline_global_f1": {
+      "estimate": 0.7069326974722259,
+      "low": 0.6133560089203749,
+      "high": 0.7853964025374456
+    },
+    "final_global_f1": {
+      "estimate": 0.7070330628547578,
+      "low": 0.6139886653455091,
+      "high": 0.7871911144348209
+    },
+    "final_minus_baseline_global_f1": {
+      "estimate": 0.0001003653825318862,
+      "low": -0.01265503022009132,
+      "high": 0.016611116740381078
+    }
+  },
+  "bootstrap_image_mean_f1": {
+    "estimate": 0.008926172215672108,
+    "low": -0.004491946239975975,
+    "high": 0.026629343636014255,
+    "n_images": 32,
+    "n_resamples": 10000,
+    "confidence": 0.95,
+    "seed": 42,
+    "method": "paired image bootstrap; percentile interval"
+  },
+  "case_selection": {
+    "feedback": "face_segment_test_g2_00570",
+    "most_fn_recovered": "face_segment_test_g2_00537",
+    "most_fp_added": "face_segment_test_g2_00578",
+    "largest_f1_decline": "face_segment_test_g2_00647"
+  }
+}

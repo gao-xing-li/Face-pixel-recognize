@@ -1,0 +1,46 @@
+{
+  "requested_case": "00570",
+  "case_00570_counts": {
+    "tp": 36075,
+    "fp": 1792,
+    "tn": 203145,
+    "fn": 21132,
+    "n_valid": 262144,
+    "accuracy": 0.9125518798828125,
+    "precision": 0.9526764729183722,
+    "recall": 0.6306046462845456,
+    "f1": 0.7588825546416476,
+    "iou": 0.6114510415430771
+  },
+  "report_image_count": 16,
+  "source_sha256": {
+    "results\\visual_assessment_19e1d740_final\\analysis_summary.json": "73dd30eb9ed13eb697e41e4e4052d6feb388c111ca2d2b4c4f5739fbd546c376",
+    "results\\visual_assessment_19e1d740_final\\per_image_assessment.csv": "8db041afbf7a681220c5acdfddda18e8f16658505d09640f6b5646b505cd488d",
+    "results\\error_diagnosis_20261031\\diagnosis.json": "cef1ae4610b6e8fca9b58dab56fbe99793202ae4a89e449a50a26950208a3cfc"
+  },
+  "case_00570_input_sha256": {
+    "image_sha256": "f5f22690c66f93e8b730e716cc4eeec4f09e0e8f9851688e94ca06f5425a8551",
+    "gt_sha256": "166735c7830d0fdabb9e704fd2e57ca1f06656b0c26dd14f4a2d190ddb9e8642",
+    "valid_sha256": "f6e4ce38898ea907fd2190573ffe2d2ebf12e17f752285607a77c432d1e6f79c",
+    "pred_sha256": "ea4fc37523ca6bea134a6935beb0f069e9dd07f469cccb6ef1375f2209b40bfa"
+  },
+  "existing_metrics_unchanged": true,
+  "originally_generated_statistical_charts": [
+    "pipeline_effects",
+    "fp_sources",
+    "facial_parts_recall",
+    "sample_stability",
+    "boundary_and_errors",
+    "uncertainty",
+    "brightness_groups"
+  ],
+  "included_statistical_charts": [
+    "sample_stability",
+    "boundary_distribution",
+    "uncertainty"
+  ],
+  "figure_selection": "图表取舍记录.json",
+  "previously_unmodified_sections_preserved": true,
+  "part_a_figures": "part_a/report_sources.json",
+  "supplementary_figures": "附加实验依据.json"
+}

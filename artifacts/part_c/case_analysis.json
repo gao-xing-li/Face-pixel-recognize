@@ -1,0 +1,69 @@
+{
+  "scope": "Post-test analysis of the already fixed final pipeline; no parameter or rule changes",
+  "n_images": 32,
+  "improved_f1": 27,
+  "declined_f1": 5,
+  "unchanged_f1": 0,
+  "selected_cases": [
+    {
+      "sample_id": "face_segment_test_g2_00610",
+      "baseline_f1": 0.9067809386850987,
+      "final_f1": 0.9299529443320369,
+      "delta_f1": 0.02317200564693822,
+      "precision": 0.8869991768814932,
+      "recall": 0.9772785764182507,
+      "fp": 10159,
+      "fn": 1854,
+      "case_path": "evaluation/test-final/cases/0014.png",
+      "fixed_pipeline_intermediate": {
+        "threshold_k": 1.25,
+        "raw_foreground_pixels": 80328,
+        "raw_foreground_inside_face": 70363,
+        "raw_components": 44,
+        "largest_raw_component_pixels": 79899,
+        "final_foreground_pixels": 89902,
+        "final_mask_matches_frozen_test_prediction": true
+      }
+    },
+    {
+      "sample_id": "face_segment_test_g2_00609",
+      "baseline_f1": 0.39463442908006957,
+      "final_f1": 0.031261476987263295,
+      "delta_f1": -0.3633729520928063,
+      "precision": 1.0,
+      "recall": 0.015878938021400748,
+      "fp": 0,
+      "fn": 65943,
+      "case_path": "evaluation/test-final/cases/0013.png",
+      "fixed_pipeline_intermediate": {
+        "threshold_k": 1.25,
+        "raw_foreground_pixels": 5685,
+        "raw_foreground_inside_face": 5583,
+        "raw_components": 56,
+        "largest_raw_component_pixels": 1063,
+        "final_foreground_pixels": 1064,
+        "final_mask_matches_frozen_test_prediction": true
+      }
+    },
+    {
+      "sample_id": "face_segment_test_g2_00718",
+      "baseline_f1": 0.27487001359193974,
+      "final_f1": 0.04516429213194712,
+      "delta_f1": -0.22970572145999263,
+      "precision": 0.04038911287429875,
+      "recall": 0.05122000036390764,
+      "fp": 66882,
+      "fn": 52144,
+      "case_path": "evaluation/test-final/cases/0025.png",
+      "fixed_pipeline_intermediate": {
+        "threshold_k": 1.25,
+        "raw_foreground_pixels": 93883,
+        "raw_foreground_inside_face": 11061,
+        "raw_components": 143,
+        "largest_raw_component_pixels": 58716,
+        "final_foreground_pixels": 69697,
+        "final_mask_matches_frozen_test_prediction": true
+      }
+    }
+  ]
+}

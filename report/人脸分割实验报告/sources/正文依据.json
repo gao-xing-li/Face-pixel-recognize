@@ -1,0 +1,58 @@
+{
+  "inputs": {
+    "算法与验证参考稿": {
+      "filename": "sources/算法与验证参考稿.md",
+      "sha256": "a65e223bee1d930a2328c46ff4696121df3000c6093e07a2986b2ba5cf5a87a9"
+    },
+    "验证候选记录": {
+      "filename": "../../artifacts/part_b/candidates.csv",
+      "sha256": "2bf0b1c9d755df959aa7d405b9f953eea6a1b2ae004e2b700b9664a75781fdfb"
+    },
+    "独立测试记录": {
+      "filename": "../../artifacts/part_c/independent_test.json",
+      "sha256": "b2b6f9986c20070a2854724ed9269f116aa1ab3e4e16094450a13cf3b61e0341"
+    },
+    "阶段诊断记录": {
+      "filename": "../../artifacts/part_c/error_diagnosis/diagnosis.json",
+      "sha256": "cef1ae4610b6e8fca9b58dab56fbe99793202ae4a89e449a50a26950208a3cfc"
+    },
+    "补充评价记录": {
+      "filename": "../../artifacts/part_c/visual_assessment/analysis_summary.json",
+      "sha256": "73dd30eb9ed13eb697e41e4e4052d6feb388c111ca2d2b4c4f5739fbd546c376"
+    },
+    "PartA数据与统计依据": {
+      "filename": "sources/part_a/report_sources.json",
+      "sha256": "57cb79ca50501bc0e0f00c970f8320b74c1ed5f81f75fae63e2400c6d3ffc960"
+    },
+    "附加实验依据": {
+      "filename": "sources/附加实验依据.json",
+      "sha256": "fd63f3cd64ca3fb60267446f4d468c7251f2aca3efe996049f59bb72e5358784"
+    }
+  },
+  "sections": [
+    {
+      "title": "实验目的、相关原理与数据准备",
+      "source": "sections/background.tex"
+    },
+    {
+      "title": "分割算法与验证选参",
+      "source": "sections/method_validation.tex"
+    },
+    {
+      "title": "独立测试与结果分析",
+      "source": "sections/test_analysis.tex"
+    },
+    {
+      "title": "附加实验，形态学补全与原方案比较",
+      "source": "sections/supplementary_morphology.tex"
+    },
+    {
+      "title": "实验总结",
+      "source": "sections/conclusion.tex"
+    }
+  ],
+  "background_sections_intentionally_blank": false,
+  "identity_fields_intentionally_blank": true,
+  "integration_note": "2026-11-02: restored completed Part A and missing supporting files from the preserved local report copy; retained the new supplementary section and conclusion.",
+  "hash_policy": "Input sha256 values refer to the current report-source bytes; original recorded values retained separately where newline normalization changed them. Historical experiment artifacts are unchanged."
+}

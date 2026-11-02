@@ -1,0 +1,3 @@
+# Preserve the exact bytes of frozen Part A evidence and its source hashes.
+*.json -text
+*.csv -text

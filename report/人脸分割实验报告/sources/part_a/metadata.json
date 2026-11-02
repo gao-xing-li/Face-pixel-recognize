@@ -1,0 +1,141 @@
+{
+  "dataset": "User-selected subset of FedST Face_segment (derived from CelebAMask-HQ)",
+  "selection_method": "User subjective appearance-based selection; not verified demographic labels",
+  "source_selected_directory": "Face_segment/test/real_image/2 (subjective selection)",
+  "source_image_directory": "Face_segment/test/real_image/2",
+  "source_label_directory": "Face_segment/test/real_label/2",
+  "source_selection_count": 163,
+  "excluded_samples": [
+    {
+      "source_filename": "00584.png",
+      "reason": "Duplicate image of 00583.png; user chose to retain 00583.png",
+      "decision_date": "2026-10-29"
+    }
+  ],
+  "sample_count": 162,
+  "split_status": "assigned_user_reviewed",
+  "image_mode": "RGB",
+  "label_mode": "L",
+  "observed_label_ids": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "label_map": {
+    "0": "background",
+    "1": "skin",
+    "2": "nose",
+    "3": "eye_g",
+    "4": "l_eye",
+    "5": "r_eye",
+    "6": "l_brow",
+    "7": "r_brow",
+    "8": "l_ear",
+    "9": "r_ear",
+    "10": "mouth",
+    "11": "u_lip",
+    "12": "l_lip",
+    "13": "hair",
+    "14": "hat",
+    "15": "ear_r",
+    "16": "neck_l",
+    "17": "neck",
+    "18": "cloth"
+  },
+  "label_map_reference": "https://github.com/switchablenorms/CelebAMask-HQ/blob/master/face_parsing/Data_preprocessing/g_mask.py",
+  "skin_ids": [
+    1,
+    2
+  ],
+  "skin_mapping_status": "confirmed for skin-color modeling on 2026-10-29",
+  "face_positive_ids": [
+    1,
+    2,
+    4,
+    5,
+    6,
+    7,
+    10,
+    11,
+    12
+  ],
+  "evaluation_ignore_ids": [
+    3
+  ],
+  "face_negative_ids": [
+    0,
+    8,
+    9,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "binary_mapping_status": "skin and face evaluation IDs confirmed on 2026-10-29; glasses excluded from all metric counts; no derived binary labels generated",
+  "annotation_quality_review": {
+    "date": "2026-10-29",
+    "reviewer": "user",
+    "method": "visual review of original, color-coded label and overlay panels",
+    "result": "no obvious problems reported; basic data quality stage passed",
+    "manifest_sha256": "9adf848d3372ea89b3751c2725af7385e460fd55dda6338a9cefd78ae09b69db",
+    "content_fingerprint": "234af0a445a47d0e9301dc4dd6f82225237f0c6551c445cace57906ae673a59e"
+  },
+  "transforms_applied": [],
+  "verification": {
+    "all_selected_images_match_original_sha256": true,
+    "all_copied_pairs_match_source_sha256": true,
+    "all_pairs_have_matching_dimensions": true,
+    "exact_duplicate_image_groups": [],
+    "identity_and_near_duplicate_review": "dHash candidate screening and assistant visual check completed; identity not verified; user split review passed",
+    "per_image_annotation_quality_review": "user visual review completed; no obvious problems reported"
+  },
+  "split": {
+    "date": "2026-10-29",
+    "seed": 42,
+    "ratio": [
+      0.6,
+      0.2,
+      0.2
+    ],
+    "counts": {
+      "train": 98,
+      "val": 32,
+      "test": 32
+    },
+    "algorithm": "Sort sample IDs; random.Random(seed).shuffle; first 98 train, next 32 val, last 32 test",
+    "grouping": "No confirmed same-photo near-duplicate groups; image-level random split",
+    "human_split_review": "passed",
+    "identity_review": "not verified",
+    "content_fingerprint": "234af0a445a47d0e9301dc4dd6f82225237f0c6551c445cace57906ae673a59e",
+    "manifest_sha256": "006132d1c8f59804e6883337ea57aa2c07b56b0c64fb410be5d23455262fb918",
+    "report_path": "data/part_a/split_report.json",
+    "human_split_review_record": {
+      "date": "2026-10-29",
+      "reviewer": "user",
+      "result": "No obvious issues reported; accepted the 98/32/32 split."
+    },
+    "layout_migration": {
+      "date": "2026-10-29",
+      "reason": "Layout migration only; all 162 IDs, split assignments and 324 PNG contents unchanged.",
+      "previous_manifest_sha256": "1cd5dda55a042348a32301b3c308e4d0660f58eb2cf2b4d44312fbf99161b96c"
+    }
+  }
+}

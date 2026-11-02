@@ -1,0 +1,55 @@
+%!TeX program = xelatex
+\documentclass{SYSUReport}
+\usepackage{array,tabularx,placeins,caption,float}
+\captionsetup{font=small,labelfont=bf,skip=7pt}
+\setlength{\headheight}{16pt}
+\setlength{\parskip}{0.2em}
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.22}
+\linespread{1.18}
+\IfFontExistsTF{SimHei}{\setCJKfamilyfont{zhhei}[AutoFakeBold=2]{SimHei}}{}
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\raggedbottom
+\IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{}
+\headl{数字图像处理}
+\headc{}
+\headr{基于颜色的人脸分割}
+\lessonTitle{数字图像处理实验报告}
+\reportTitle{基于颜色的人脸分割}
+\stuname{}
+\stuid{}
+\inst{}
+\major{}
+\date{2026 年 11 月 2 日}
+\hypersetup{pdftitle={基于颜色的人脸分割},pdfauthor={},pdfsubject={数据准备、肤色统计、颜色分割与独立测试}}
+\graphicspath{{images/}}
+\begin{document}
+\hypersetup{pageanchor=false}
+\cover
+\thispagestyle{empty}
+\clearpage
+\pagenumbering{Roman}
+\hypersetup{pageanchor=true}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\input{sections/background}
+\FloatBarrier
+\input{sections/method_validation}
+\FloatBarrier
+\input{sections/test_analysis}
+\FloatBarrier
+\input{sections/supplementary_morphology}
+\FloatBarrier
+\clearpage
+\input{sections/conclusion}
+\FloatBarrier
+\begin{thebibliography}{9}
+\bibitem{boundaryiou}
+Cheng B, Girshick R, Doll\'{a}r P, et al.
+Boundary IoU: Improving Object-Centric Image Segmentation Evaluation[C].
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, 2021: 15334--15342.
+\end{thebibliography}
+\end{document}

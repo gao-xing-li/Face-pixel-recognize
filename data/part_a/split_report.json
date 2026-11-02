@@ -1,0 +1,214 @@
+{
+  "date": "2026-10-29",
+  "seed": 42,
+  "ratio": [
+    0.6,
+    0.2,
+    0.2
+  ],
+  "counts": {
+    "train": 98,
+    "val": 32,
+    "test": 32
+  },
+  "algorithm": "Sort sample IDs; random.Random(seed).shuffle; first 98 train, next 32 val, last 32 test",
+  "grouping": "No confirmed same-photo near-duplicate groups; image-level random split",
+  "human_split_review": "passed",
+  "identity_review": "not verified",
+  "content_fingerprint": "234af0a445a47d0e9301dc4dd6f82225237f0c6551c445cace57906ae673a59e",
+  "manifest_sha256": "006132d1c8f59804e6883337ea57aa2c07b56b0c64fb410be5d23455262fb918",
+  "report_path": "data/part_a/split_report.json",
+  "human_split_review_record": {
+    "date": "2026-10-29",
+    "reviewer": "user",
+    "result": "No obvious issues reported; accepted the 98/32/32 split."
+  },
+  "near_duplicate_screening": {
+    "method": "64-bit dHash, Hamming distance <= 8",
+    "candidate_count": 35,
+    "visual_review": "Assistant inspected candidate montage; no obvious same-photo crop/scale duplicates observed",
+    "limitations": "Not an identity check or exhaustive near-duplicate search",
+    "pairs": [
+      {
+        "a": "00589.png",
+        "b": "00720.png",
+        "dhash_distance": 4
+      },
+      {
+        "a": "00533.png",
+        "b": "00720.png",
+        "dhash_distance": 5
+      },
+      {
+        "a": "00546.png",
+        "b": "00590.png",
+        "dhash_distance": 5
+      },
+      {
+        "a": "00589.png",
+        "b": "00590.png",
+        "dhash_distance": 5
+      },
+      {
+        "a": "00590.png",
+        "b": "00720.png",
+        "dhash_distance": 5
+      },
+      {
+        "a": "00533.png",
+        "b": "00590.png",
+        "dhash_distance": 6
+      },
+      {
+        "a": "00533.png",
+        "b": "00635.png",
+        "dhash_distance": 6
+      },
+      {
+        "a": "00546.png",
+        "b": "00720.png",
+        "dhash_distance": 6
+      },
+      {
+        "a": "00625.png",
+        "b": "00682.png",
+        "dhash_distance": 6
+      },
+      {
+        "a": "00533.png",
+        "b": "00546.png",
+        "dhash_distance": 7
+      },
+      {
+        "a": "00533.png",
+        "b": "00589.png",
+        "dhash_distance": 7
+      },
+      {
+        "a": "00533.png",
+        "b": "00665.png",
+        "dhash_distance": 7
+      },
+      {
+        "a": "00573.png",
+        "b": "00738.png",
+        "dhash_distance": 7
+      },
+      {
+        "a": "00589.png",
+        "b": "00596.png",
+        "dhash_distance": 7
+      },
+      {
+        "a": "00589.png",
+        "b": "00635.png",
+        "dhash_distance": 7
+      },
+      {
+        "a": "00596.png",
+        "b": "00720.png",
+        "dhash_distance": 7
+      },
+      {
+        "a": "00617.png",
+        "b": "00683.png",
+        "dhash_distance": 7
+      },
+      {
+        "a": "00635.png",
+        "b": "00665.png",
+        "dhash_distance": 7
+      },
+      {
+        "a": "00646.png",
+        "b": "00733.png",
+        "dhash_distance": 7
+      },
+      {
+        "a": "00532.png",
+        "b": "00634.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00533.png",
+        "b": "00596.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00542.png",
+        "b": "00741.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00546.png",
+        "b": "00589.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00562.png",
+        "b": "00592.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00563.png",
+        "b": "00573.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00563.png",
+        "b": "00589.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00563.png",
+        "b": "00665.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00563.png",
+        "b": "00720.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00577.png",
+        "b": "00596.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00590.png",
+        "b": "00596.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00590.png",
+        "b": "00635.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00591.png",
+        "b": "00613.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00592.png",
+        "b": "00720.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00608.png",
+        "b": "00646.png",
+        "dhash_distance": 8
+      },
+      {
+        "a": "00635.png",
+        "b": "00706.png",
+        "dhash_distance": 8
+      }
+    ]
+  },
+  "layout_migration": {
+    "date": "2026-10-29",
+    "reason": "Layout migration only; all 162 IDs, split assignments and 324 PNG contents unchanged.",
+    "previous_manifest_sha256": "1cd5dda55a042348a32301b3c308e4d0660f58eb2cf2b4d44312fbf99161b96c"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "part_a_revision": "1389a77158ab484dbdbbbb4e4e2f4d1c46a9625b",
+  "inputs": {
+    "configs/skin_params.json": {
+      "report_copy": "sources/part_a/skin_params.json",
+      "sha256": "66219e403e334f6830d95cf1151f371c06ebaf62535e88b89d0ef1dd5959d3ac"
+    },
+    "data/part_a/metadata.json": {
+      "report_copy": "sources/part_a/metadata.json",
+      "sha256": "e8570b2016f1b4720448cc187ccf837ae9b57c392cf7a223b7a03187ba2765ee"
+    },
+    "data/part_a/split_report.json": {
+      "report_copy": "sources/part_a/split_report.json",
+      "sha256": "420ebeb5623f54c418e6c2b81c4d14b28a909c0a32b9e416caee50953ed5a1f2"
+    },
+    "data/split_manifest.csv": {
+      "report_copy": "sources/part_a/split_manifest.csv",
+      "sha256": "006132d1c8f59804e6883337ea57aa2c07b56b0c64fb410be5d23455262fb918"
+    },
+    "results/skin_statistics/preliminary_analysis_metrics.json": {
+      "report_copy": "sources/part_a/preliminary_analysis_metrics.json",
+      "sha256": "672dbde3d28c7f16c6d156d5608562d89b5ee2baf420291be8e88a6a66bd7433"
+    },
+    "results/skin_statistics/verification.json": {
+      "report_copy": "sources/part_a/verification.json",
+      "sha256": "d463e9498984dc432d871e500d0033ce5f82e6facc583b81eedfd46d42f441b3"
+    }
+  },
+  "figures": {
+    "images/part_a_channel_distributions.png": {
+      "source_revision": "1389a77158ab484dbdbbbb4e4e2f4d1c46a9625b",
+      "source_path": "results/skin_statistics/channel_distributions.png",
+      "sha256": "8b8b860ed2a2df8142e9fe6dfb9c1076db247f27f7d055e3f4d303b7c72a6dfe",
+      "transformation": "none"
+    },
+    "images/part_a_joint_distribution.png": {
+      "source_revision": "1389a77158ab484dbdbbbb4e4e2f4d1c46a9625b",
+      "source_path": "results/skin_statistics/joint_distribution.png",
+      "sha256": "b6f48ebb29b30779987b7fe7b5e4c6b5941742287c94808afaeb2640b8b5cf92",
+      "transformation": "none"
+    },
+    "images/part_a_label_review_00546.png": {
+      "source": "existing Part A manual-review panel, sample 00546",
+      "source_image_sha256": "63271dbbd79398a22fb27fb5509a50de8c450fddbfdc68957fdc59456c07ba68",
+      "source_label_sha256": "a38953692286fad40c7a1f6f352a2c30c33006515a0b6687c2f706e86df452d3",
+      "sha256": "2c780cc6f09bd7a92c761646d3697ff10604320d02be2ffa72accd977bedb782",
+      "transformation": "none; copied existing panel"
+    }
+  },
+  "notes": [
+    "Statistical figures and evidence copied byte-for-byte from frozen Part A revision.",
+    "The original and raw label used by the existing review panel match the frozen Part A sample.",
+    "No statistics, split, detection configuration or evaluation metric was changed."
+  ]
+}
