@@ -40,14 +40,39 @@ def _check_selected(row, adapter, include_labels):
             raise ValueError("derived labels changed")
 
 
+def select_candidates(candidates, plan):
+    """Choose on validation, optionally prioritizing completion within an F1 budget."""
+    methods = plan["postprocess_values"]
+    def f1_rank(row):
+        return (row["f1"], -methods.index(row["postprocess"]), -row["kernel"], -row["k"])
+    best_f1 = max(candidates, key=f1_rank)
+    baseline = max((row for row in candidates if row["postprocess"] == "none"), key=f1_rank)
+    if plan["metric"] == "global.f1":
+        return baseline, best_f1, {"best_f1_candidate": best_f1["candidate"]}
+    budget = plan.get("max_f1_drop")
+    if type(budget) not in (int, float) or not np.isfinite(budget) or not 0 <= budget <= 1:
+        raise ValueError("max_f1_drop must be a finite number in [0,1]")
+    reference_rows = [row for row in candidates if row["postprocess"] == "largest_fill"]
+    if not reference_rows:
+        raise ValueError("morphology selection needs the largest_fill reference")
+    reference = max(reference_rows, key=f1_rank)
+    floor = reference["f1"] - budget
+    eligible = [row for row in candidates if row["postprocess"] != "none" and row["f1"] >= floor]
+    chosen = max(eligible, key=lambda row: (row["recall"], *f1_rank(row)))
+    return baseline, chosen, {"reference_candidate": reference["candidate"], "reference_f1": reference["f1"],
+                              "max_f1_drop": budget, "minimum_f1": floor,
+                              "best_f1_candidate": best_f1["candidate"],
+                              "reason": "Maximize validation recall while losing at most the stated absolute F1 budget relative to v1 largest_fill; test scores are not used."}
+
+
 def validate(manifest, params_path, plan_path, output):
     manifest, params_path, plan_path, output = map(lambda p: Path(p).resolve(), (manifest, params_path, plan_path, output))
     if output.exists():
         raise ValueError(f"output already exists: {output}")
     params, adapter = verify_inputs(manifest, params_path)
     plan = read_json(plan_path)
-    if plan["split"] != "validation" or plan["metric"] != "global.f1":
-        raise ValueError("selection is restricted to validation/global.f1")
+    if plan["split"] != "validation" or plan["metric"] not in ("global.f1", "global.recall_with_f1_budget"):
+        raise ValueError("selection is restricted to validation F1 or recall with an F1 budget")
     methods = plan["postprocess_values"]
     if not methods or methods[0] != "none" or len(set(methods)) != len(methods) or any(m not in METHODS for m in methods):
         raise ValueError("invalid postprocess grid")
@@ -92,10 +117,7 @@ def validate(manifest, params_path, plan_path, output):
                                    "image_mean_f1": summary["image_mean"]["f1"]})
                 configs[name] = config
                 print(f"{name}: k={k:g} post={method} kernel={kernel} F1={summary['global']['f1']:.6f}", flush=True)
-        def rank(row):
-            return (row["f1"], -methods.index(row["postprocess"]), -row["kernel"], -row["k"])
-        best = max(candidates, key=rank)
-        baseline = max((r for r in candidates if r["postprocess"] == "none"), key=rank)
+        baseline, best, selection_policy = select_candidates(candidates, plan)
         frozen = {}
         for label, chosen in (("baseline", baseline), ("final", best)):
             config = {"schema_version": 1, "config_id": f"{plan.get('config_prefix', 'part-b-v1')}-{label}", "synthetic_demo": False,
@@ -106,9 +128,12 @@ def validate(manifest, params_path, plan_path, output):
                       "labels": {"positive_ids": adapter["positive_ids"], "ignore_ids": adapter["ignore_ids"],
                                  "gt_encoding": "binary255", "valid_encoding": "binary255", "pred_encoding": "binary255"},
                       **configs[chosen["candidate"]],
-                      "selection": {"fixed": True, "split": "validation", "metric": "global.f1", "score": chosen["f1"],
+                      "selection": {"fixed": True, "split": "validation", "metric": "global.f1" if label == "baseline" else plan["metric"],
+                                    "score": chosen["recall"] if label == "final" and plan["metric"] == "global.recall_with_f1_budget" else chosen["f1"],
+                                    "validation_f1": chosen["f1"], "validation_recall": chosen["recall"],
                                     "candidate": chosen["candidate"], "plan_sha256": digest(plan_path),
-                                    "reason": "Maximum validation global F1 within the prespecified grid; " + plan["tie_break"],
+                                    "reason": "Maximum validation global F1 within the grid; " + plan["tie_break"] if label == "baseline" else selection_policy.get("reason", "Maximum validation global F1 within the grid; " + plan["tie_break"]),
+                                    "policy": selection_policy,
                                     "test_used": False,
                                     "prior_test_feedback": plan.get("prior_test_feedback", False),
                                     "independent_test_claim": not plan.get("prior_test_feedback", False)}}
@@ -116,7 +141,7 @@ def validate(manifest, params_path, plan_path, output):
             write_json(stage / f"{label}_config.json", config)
         write_csv(stage / "candidates.csv", candidates)
         write_json(stage / "selection.json", {"baseline": baseline, "final": best, "n_validation_images": len(loaded),
-                                               "plan": plan, "test_evaluated": False})
+                                               "plan": plan, "selection_policy": selection_policy, "test_evaluated": False})
         plot_curve(stage / "validation_curve.png", candidates, methods, len(loaded))
         stage.rename(output)
     return frozen
@@ -126,9 +151,10 @@ def plot_curve(path, rows, methods, n_images=32):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4), layout="constrained")
     kernel_search = any(len({r["kernel"] for r in rows if r["postprocess"] == method}) > 1 for method in methods)
-    for ax, metric in zip(axes, ("f1", "iou")):
+    metrics = ("f1", "iou", "recall") if kernel_search else ("f1", "iou")
+    fig, axes = plt.subplots(1, len(metrics), figsize=(5.5 * len(metrics), 4), layout="constrained")
+    for ax, metric in zip(axes, metrics):
         for method in methods:
             group = [r for r in rows if r["postprocess"] == method]
             if kernel_search and len({r["kernel"] for r in group}) == 1:

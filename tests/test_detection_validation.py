@@ -8,7 +8,7 @@ import numpy as np
 
 from face_pixel.b_data import PROJECT, binary_labels, read_json, write_json
 from face_pixel.detection import detect, fill_holes, postprocess, validate_model
-from face_pixel.validation import settings, validate
+from face_pixel.validation import settings, validate, select_candidates
 
 
 class DetectionTests(unittest.TestCase):
@@ -87,6 +87,21 @@ class DetectionTests(unittest.TestCase):
         for value in (0, 2, -3, True, 5.0):
             with self.assertRaises(ValueError):
                 postprocess(np.zeros((5, 5), dtype=np.uint8), "largest_close_fill", value)
+
+    def test_completion_selection_respects_f1_budget(self):
+        plan = {"metric": "global.recall_with_f1_budget", "max_f1_drop": 0.01,
+                "postprocess_values": ["none", "largest_fill", "largest_close_fill"]}
+        rows = [dict(candidate="raw", postprocess="none", kernel=5, k=1.25, f1=0.6, recall=0.8),
+                dict(candidate="old", postprocess="largest_fill", kernel=5, k=1.25, f1=0.73, recall=0.83),
+                dict(candidate="within", postprocess="largest_close_fill", kernel=21, k=1.25, f1=0.725, recall=0.86),
+                dict(candidate="outside", postprocess="largest_close_fill", kernel=41, k=1.25, f1=0.71, recall=0.90)]
+        _, chosen, policy = select_candidates(rows, plan)
+        self.assertEqual(chosen["candidate"], "within")
+        self.assertEqual(policy["best_f1_candidate"], "old")
+        self.assertAlmostEqual(policy["minimum_f1"], 0.72)
+        plan["metric"] = "global.f1"
+        _, chosen, _ = select_candidates(rows, plan)
+        self.assertEqual(chosen["candidate"], "old")
 
     def test_face_mapping_and_glasses(self):
         gt, valid = binary_labels(np.arange(19, dtype=np.uint8).reshape(1, 19))
