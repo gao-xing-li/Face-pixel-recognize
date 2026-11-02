@@ -1,0 +1,32 @@
+{
+  "experiment_date": "2026-11-02",
+  "scope": "supplementary post-development comparison on original test split",
+  "independent_test_claim": false,
+  "detector_revision": "40e7b48439e6eb95ba1825ea8c76ff391f2fc5a1",
+  "original_revision": "19e1d7409991c5896dfca9a6ef03694d2276a152",
+  "manifest_sha256": "da0922889fb090b20f4badc9706bef24710a640996a0eefe9cd2e2e440319f8a",
+  "original_report_commit": "b77baeede726fa63f5750d0a38144ac816d8dee2",
+  "comparison_sha256": "078a595f98f6ccd7adfd770d26231433ea1e6b91bde121c1b848ad76fba58b9d",
+  "per_image_sha256": "7f7581c07ce06582e1ac45ac97fec4f844d2c111ff8b69a7b8504c9d7a7e4001",
+  "semantic_sha256": "9571a846ac5fdaa11f3ed5215c32055ca30c88456b06d1e9e287f11288769702",
+  "section_sha256": "d9d271236e53d48a0bebe3cda0f22ea1602bf09ef53d4a1dc451439580caba03",
+  "reproduction_script_sha256": "6ea818c620794c4e252c1cd0632cd323834030e51a62485f4e1f6e79a1343aac",
+  "v1_masks_equal_original": {
+    "validation": 32,
+    "test": 32
+  },
+  "figures": [
+    "morphology_00570.png",
+    "morphology_00537.png",
+    "morphology_00578.png",
+    "morphology_00647.png",
+    "morphology_paired_changes.png"
+  ],
+  "case_selection": {
+    "feedback": "face_segment_test_g2_00570",
+    "most_fn_recovered": "face_segment_test_g2_00537",
+    "most_fp_added": "face_segment_test_g2_00578",
+    "largest_f1_decline": "face_segment_test_g2_00647"
+  },
+  "selection": "Fixed validation recall objective with an absolute F1 loss budget of 0.01, not retuned after this evaluation."
+}

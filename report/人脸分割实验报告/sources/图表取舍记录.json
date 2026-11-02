@@ -10,7 +10,8 @@
   "retained_original_figure_9": "逐图F1散点与累积分布，展示均值和中位数以外的信息",
   "original_figure_10": "只保留逐图边界分布，删除由混淆计数表换算的重复柱状图",
   "four_case_comparisons_preserved": true,
-  "report_figures": 8,
+  "report_figures": 13,
   "fp_table_rows": 8,
-  "previous_figures_preserved_locally": true
+  "previous_figures_preserved_locally": true,
+  "supplementary_figures": "保留四个新旧掩膜与误差空间对照，以及逐图配对散点，不绘制重复总体指标与类别计数的柱状图。"
 }

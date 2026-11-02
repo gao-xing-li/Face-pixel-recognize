@@ -1,0 +1,13 @@
+{
+  "split": "test",
+  "config_id": "part-b-v2-morphology-final",
+  "n_images": 32,
+  "config_sha256": "239c9849d6779b65a7559c132534a33093a84882c246fe442d58eaf868fde994",
+  "runtime": {
+    "python": "3.12.14",
+    "opencv": "4.14.0",
+    "numpy": "2.5.4"
+  },
+  "ground_truth_read": false,
+  "metrics_computed": false
+}
