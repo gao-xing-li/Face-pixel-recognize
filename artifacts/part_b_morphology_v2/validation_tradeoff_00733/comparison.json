@@ -1,0 +1,34 @@
+{
+  "sample_id": "face_segment_test_g2_00733",
+  "split": "validation",
+  "scope": "Validation comparison",
+  "selected_after_configuration_was_frozen": true,
+  "reference_config_id": "part-b-v2-morphology-reference",
+  "new_config_id": "part-b-v2-morphology-final",
+  "before": {
+    "tp": 4553,
+    "fp": 49654,
+    "tn": 161965,
+    "fn": 45972,
+    "n_valid": 262144,
+    "accuracy": 0.6352157592773438,
+    "precision": 0.08399284225284558,
+    "recall": 0.09011380504700643,
+    "f1": 0.08694572814421571,
+    "iou": 0.0454486469220096
+  },
+  "after": {
+    "tp": 5864,
+    "fp": 84739,
+    "tn": 126880,
+    "fn": 44661,
+    "n_valid": 262144,
+    "accuracy": 0.506378173828125,
+    "precision": 0.0647219187002638,
+    "recall": 0.11606135576447303,
+    "f1": 0.08310186497364094,
+    "iou": 0.04335225928554531
+  },
+  "added_foreground_pixels": 36396,
+  "removed_foreground_pixels": 0
+}

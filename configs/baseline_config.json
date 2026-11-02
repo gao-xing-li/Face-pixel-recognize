@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "config_id": "part-b-v1-baseline",
+  "config_id": "part-b-v2-morphology-baseline",
   "synthetic_demo": false,
-  "code_revision": "dc87b4b2ab90dbe4eabefaee1140c9dcc9dabf4b",
+  "code_revision": "daac97d26e4794a930b4767c2e6b90690a65a97a",
   "source_sha256": {
     "__init__.py": "4d13910f86e5f7d716575d3f8fb921f702f8c4551d143138283194ff069ec8ce",
     "b_data.py": "d49c210df3329bdcf0f4a476dfe5345fbaead95fc8ca8208737ea938d02a0fa4",
@@ -10,11 +10,11 @@
     "cli.py": "351c459d3a714cfa7c08e9c6a3f69525b7b58657d223dbc860801ba78391f576",
     "data_io.py": "9d64c40c34c5a171dc882c99fea38b863c21d2b42552fb3efa2fe63b1a4f2aa9",
     "demo.py": "fdef4efc64837fad3bd9a682907931708a09fdd5fce700f9120c5282868de817",
-    "detection.py": "fb3fef1117baa7066c8c676afdef57326a4b0d153a93d9da8599e8e7e4d4461e",
+    "detection.py": "5febd0a700c5953638048a845d6adae34356680f30c1ee58b426999747f40b58",
     "evaluation.py": "94fcac10ba3b1bc5d64bc314f915172b56dce305d4bfca95d881155afe35814e",
     "modeling.py": "ab45dd8044a9506dbe58d46858cae5a61db21873b934141af65551096d72c395",
     "part_a_common.py": "f8aa2f0aa36fec8784cd3b2b4fad1996fe3bfbf8c7f19a32659f9a12cb276cce",
-    "validation.py": "9e487b2fd476823688cd67ea71fa73cb85b59feceab9f454d08b40dbbdfc90bf"
+    "validation.py": "171048c0e1c7b2c21b4a2b0abc32564c47f670c5d5ee988647aec5da5b7024d4"
   },
   "runtime": {
     "python": "3.12.14",
@@ -53,7 +53,7 @@
       "Cb",
       "Cr"
     ],
-    "k": 1.5,
+    "k": 1.25,
     "inclusive": true
   },
   "preprocess": "none",
@@ -66,10 +66,22 @@
     "fixed": true,
     "split": "validation",
     "metric": "global.f1",
-    "score": 0.592239779293503,
-    "candidate": "candidate_02",
-    "plan_sha256": "922708ba0a018f5ae142a09df0227453418e27f7a446e2fe5259d9d23e045f4e",
-    "reason": "Maximum validation global F1 within the prespecified grid; higher global F1, then simpler postprocess in listed order, then smaller k",
-    "test_used": false
+    "score": 0.5612835421130449,
+    "validation_f1": 0.5612835421130449,
+    "validation_recall": 0.6039018509758443,
+    "candidate": "candidate_00",
+    "plan_sha256": "cfcf0625f9a969c6e2cf2ce9fe9df56b0abb31ae12be310b8f1523e57bdfc1e8",
+    "reason": "Maximum validation global F1 within the grid; higher global recall within the F1 budget, then higher F1, listed method order, smaller kernel and smaller k",
+    "policy": {
+      "reference_candidate": "candidate_01",
+      "reference_f1": 0.7270131183392603,
+      "max_f1_drop": 0.01,
+      "minimum_f1": 0.7170131183392603,
+      "best_f1_candidate": "candidate_01",
+      "reason": "Maximize validation recall while losing at most the stated absolute F1 budget relative to v1 largest_fill; test scores are not used."
+    },
+    "test_used": false,
+    "prior_test_feedback": true,
+    "independent_test_claim": false
   }
 }
