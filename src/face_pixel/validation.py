@@ -54,6 +54,9 @@ def validate(manifest, params_path, plan_path, output):
     ks = plan["k_values"]
     if not ks or len(set(ks)) != len(ks) or any(type(k) not in (int, float) or not np.isfinite(k) or k <= 0 for k in ks):
         raise ValueError("invalid k grid")
+    kernels = plan.get("kernel_values", [plan["closing_kernel"]])
+    if not kernels or len(set(kernels)) != len(kernels) or any(type(k) is not int or k < 1 or k % 2 == 0 for k in kernels):
+        raise ValueError("kernel grid must contain unique odd positive integers")
     selected = [r for r in read_dataset_manifest(manifest) if r["split"] == "validation"]
     if not selected:
         raise ValueError("validation split is empty")
@@ -63,7 +66,7 @@ def validate(manifest, params_path, plan_path, output):
         loaded.append((row, read_bgr(row["image_path"]), read_binary_mask(row["mask_path"], "binary255"),
                        read_binary_mask(row["valid_mask_path"], "binary255")))
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PROJECT, text=True).strip()
-    if subprocess.check_output(["git", "status", "--porcelain", "--", "src/face_pixel", "configs/validation_plan.json"], cwd=PROJECT, text=True).strip():
+    if subprocess.check_output(["git", "status", "--porcelain", "--", "src/face_pixel", str(plan_path)], cwd=PROJECT, text=True).strip():
         raise ValueError("commit detector/evaluator/validation plan before the formal run for a stable code_revision")
     output.parent.mkdir(parents=True, exist_ok=True)
     candidates, configs = [], {}
@@ -71,9 +74,10 @@ def validate(manifest, params_path, plan_path, output):
         stage = Path(temp) / "run"
         stage.mkdir()
         for method in methods:
-            for k in sorted(ks):
+            method_kernels = sorted(kernels) if method in ("largest_close_fill", "largest_dilate_fill_erode") else [plan["closing_kernel"]]
+            for k, kernel in ((k, kernel) for k in sorted(ks) for kernel in method_kernels):
                 name = f"candidate_{len(candidates):02d}"
-                config = settings(k, method, plan["closing_kernel"])
+                config = settings(k, method, kernel)
                 records = []
                 for row, image, gt, valid in loaded:
                     records.append({"sample_id": row["sample_id"], **evaluate(detect(image, params, config), gt, valid)})
@@ -84,17 +88,17 @@ def validate(manifest, params_path, plan_path, output):
                 directory.mkdir()
                 write_csv(directory / "per_image.csv", records)
                 write_json(directory / "summary.json", summary)
-                candidates.append({"candidate": name, "k": k, "postprocess": method, **summary["global"],
+                candidates.append({"candidate": name, "k": k, "postprocess": method, "kernel": kernel, **summary["global"],
                                    "image_mean_f1": summary["image_mean"]["f1"]})
                 configs[name] = config
-                print(f"{name}: k={k:g} post={method} F1={summary['global']['f1']:.6f}", flush=True)
+                print(f"{name}: k={k:g} post={method} kernel={kernel} F1={summary['global']['f1']:.6f}", flush=True)
         def rank(row):
-            return (row["f1"], -methods.index(row["postprocess"]), -row["k"])
+            return (row["f1"], -methods.index(row["postprocess"]), -row["kernel"], -row["k"])
         best = max(candidates, key=rank)
         baseline = max((r for r in candidates if r["postprocess"] == "none"), key=rank)
         frozen = {}
         for label, chosen in (("baseline", baseline), ("final", best)):
-            config = {"schema_version": 1, "config_id": f"part-b-v1-{label}", "synthetic_demo": False,
+            config = {"schema_version": 1, "config_id": f"{plan.get('config_prefix', 'part-b-v1')}-{label}", "synthetic_demo": False,
                       "code_revision": revision, "source_sha256": code_hashes(), "runtime": runtime(),
                       "data_manifest_sha256": digest(manifest), "source_manifest_sha256": adapter["source_manifest_sha256"],
                       "adapter_sha256": digest(manifest.parent / "adapter.json"),
@@ -105,27 +109,33 @@ def validate(manifest, params_path, plan_path, output):
                       "selection": {"fixed": True, "split": "validation", "metric": "global.f1", "score": chosen["f1"],
                                     "candidate": chosen["candidate"], "plan_sha256": digest(plan_path),
                                     "reason": "Maximum validation global F1 within the prespecified grid; " + plan["tie_break"],
-                                    "test_used": False}}
+                                    "test_used": False,
+                                    "prior_test_feedback": plan.get("prior_test_feedback", False),
+                                    "independent_test_claim": not plan.get("prior_test_feedback", False)}}
             frozen[label] = config
             write_json(stage / f"{label}_config.json", config)
         write_csv(stage / "candidates.csv", candidates)
         write_json(stage / "selection.json", {"baseline": baseline, "final": best, "n_validation_images": len(loaded),
                                                "plan": plan, "test_evaluated": False})
-        plot_curve(stage / "validation_curve.png", candidates, methods)
+        plot_curve(stage / "validation_curve.png", candidates, methods, len(loaded))
         stage.rename(output)
     return frozen
 
 
-def plot_curve(path, rows, methods):
+def plot_curve(path, rows, methods, n_images=32):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     fig, axes = plt.subplots(1, 2, figsize=(11, 4), layout="constrained")
+    kernel_search = any(len({r["kernel"] for r in rows if r["postprocess"] == method}) > 1 for method in methods)
     for ax, metric in zip(axes, ("f1", "iou")):
         for method in methods:
             group = [r for r in rows if r["postprocess"] == method]
-            ax.plot([r["k"] for r in group], [r[metric] for r in group], marker="o", label=method)
-        ax.set(xlabel="k", ylabel=f"Global {metric.upper()}", title="32 validation images; test not evaluated")
+            if kernel_search and len({r["kernel"] for r in group}) == 1:
+                ax.axhline(group[0][metric], linestyle="--", label=method)
+            else:
+                ax.plot([r["kernel"] if kernel_search else r["k"] for r in group], [r[metric] for r in group], marker="o", label=method)
+        ax.set(xlabel="Morphology kernel (pixels)" if kernel_search else "k", ylabel=f"Global {metric.upper()}", title=f"{n_images} validation images; test scores not used")
         ax.grid(alpha=0.2)
     axes[0].legend(fontsize=8)
     fig.savefig(path, dpi=170)
@@ -142,7 +152,7 @@ def predict(manifest, config_path, split, output):
     if config.get("synthetic_demo") is not False or not config.get("selection", {}).get("fixed"):
         raise ValueError("requires a frozen real-data configuration")
     if config["selection"].get("split") != "validation" or config["selection"].get("test_used") is not False:
-        raise ValueError("configuration was not selected independently of test")
+        raise ValueError("configuration grid search must use validation, not test scores")
     if config["source_sha256"] != code_hashes():
         raise ValueError("code differs from frozen configuration; use its code_revision")
     params_path = PROJECT / config["model_params"]["path"]

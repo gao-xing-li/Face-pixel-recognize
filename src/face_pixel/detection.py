@@ -5,7 +5,8 @@ import math
 import cv2
 import numpy as np
 
-METHODS = ("none", "fill", "largest_fill", "close_largest_fill")
+METHODS = ("none", "fill", "largest_fill", "close_largest_fill",
+           "largest_close_fill", "largest_dilate_fill_erode")
 
 
 def validate_model(params):
@@ -41,12 +42,31 @@ def postprocess(mask, method, kernel=5):
         element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel, kernel))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, element, iterations=1,
                               borderType=cv2.BORDER_CONSTANT, borderValue=0)
-    if method in ("largest_fill", "close_largest_fill"):
+    if method in ("largest_fill", "close_largest_fill", "largest_close_fill", "largest_dilate_fill_erode"):
         count, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
         if count > 1:
             # Ties follow OpenCV's component labels; version is recorded.
             component = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
             mask = (labels == component).astype(np.uint8)
+    if method in ("largest_close_fill", "largest_dilate_fill_erode"):
+        # Select the face candidate before expanding it, so discarded islands
+        # cannot be reconnected to it by the morphology step.
+        element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel, kernel))
+        # Work beyond the image boundary: erosion must not clip an object just
+        # because it touches the finite array edge. Crop only after all steps.
+        pad = kernel
+        padded = np.pad(mask, pad)
+        if method == "largest_close_fill":
+            padded = cv2.morphologyEx(padded, cv2.MORPH_CLOSE, element, iterations=1,
+                                     borderType=cv2.BORDER_CONSTANT, borderValue=0)
+            padded = fill_holes(padded)
+        else:
+            padded = cv2.dilate(padded, element, iterations=1,
+                                borderType=cv2.BORDER_CONSTANT, borderValue=0)
+            padded = fill_holes(padded)
+            padded = cv2.erode(padded, element, iterations=1,
+                               borderType=cv2.BORDER_CONSTANT, borderValue=0)
+        return padded[pad:-pad, pad:-pad].astype(np.uint8)
     return fill_holes(mask) if method != "none" else mask
 
 

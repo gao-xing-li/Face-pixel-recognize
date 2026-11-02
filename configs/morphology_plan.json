@@ -1,0 +1,14 @@
+{
+  "plan_id": "part-b-morphology-v2",
+  "config_prefix": "part-b-v2-morphology",
+  "split": "validation",
+  "metric": "global.f1",
+  "k_values": [1.25],
+  "postprocess_values": ["none", "largest_fill", "close_largest_fill", "largest_close_fill", "largest_dilate_fill_erode"],
+  "closing_kernel": 5,
+  "kernel_values": [5, 9, 15, 21, 31, 41],
+  "tie_break": "higher global F1, then listed method order, then smaller kernel, then smaller k",
+  "prior_test_feedback": true,
+  "feedback_sample_id": "face_segment_test_g2_00570",
+  "reason": "User feedback on an original test image motivated morphological repair of exterior-connected face gaps. Keep A statistics and v1 threshold k=1.25 fixed; choose postprocessing/kernel only on the 32 validation images. The original test set is no longer an independent holdout for v2."
+}

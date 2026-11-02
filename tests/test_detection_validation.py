@@ -42,6 +42,52 @@ class DetectionTests(unittest.TestCase):
         self.assertEqual(int(result.sum()), 16)
         self.assertEqual(result[8, 8], 0)
 
+    def test_morphology_seals_a_gap_that_plain_fill_cannot_fill(self):
+        mask = np.zeros((35, 35), dtype=np.uint8)
+        mask[5:29, 5:29] = 1
+        mask[9:25, 9:25] = 0
+        mask[5:10, 15:18] = 0  # Interior is connected to exterior through a slit.
+        self.assertEqual(postprocess(mask, "largest_fill")[17, 17], 0)
+        for method in ("largest_close_fill", "largest_dilate_fill_erode"):
+            with self.subTest(method=method):
+                result = postprocess(mask, method, 9)
+                self.assertEqual(result[17, 17], 1)
+                self.assertEqual(result[0, 0], 0)
+                self.assertEqual(result.dtype, np.uint8)
+                self.assertEqual(result.shape, mask.shape)
+
+    def test_new_morphology_preserves_edge_touching_objects(self):
+        mask = np.zeros((35, 35), dtype=np.uint8)
+        mask[:20, :20] = 1
+        for method in ("largest_close_fill", "largest_dilate_fill_erode"):
+            result = postprocess(mask, method, 9)
+            self.assertEqual(result[0, 0], 1)
+            self.assertEqual(result[-1, -1], 0)
+
+    def test_morphology_discards_islands_before_expanding(self):
+        mask = np.zeros((41, 41), dtype=np.uint8)
+        mask[10:30, 10:30] = 1
+        mask[32, 32] = 1
+        for method in ("largest_close_fill", "largest_dilate_fill_erode"):
+            result = postprocess(mask, method, 9)
+            self.assertEqual(result[32, 32], 0)
+            self.assertEqual(result[20, 20], 1)
+
+    def test_morphology_empty_full_masks_and_kernel_one(self):
+        for method in ("largest_close_fill", "largest_dilate_fill_erode"):
+            for value in (0, 1):
+                mask = np.full((11, 13), value, dtype=np.uint8)
+                np.testing.assert_array_equal(postprocess(mask, method, 9), mask)
+            mask = np.zeros((21, 21), dtype=np.uint8)
+            mask[3:17, 3:17] = 1
+            mask[8:10, 8:10] = 0
+            np.testing.assert_array_equal(postprocess(mask, method, 1), postprocess(mask, "largest_fill"))
+
+    def test_invalid_morphology_kernel(self):
+        for value in (0, 2, -3, True, 5.0):
+            with self.assertRaises(ValueError):
+                postprocess(np.zeros((5, 5), dtype=np.uint8), "largest_close_fill", value)
+
     def test_face_mapping_and_glasses(self):
         gt, valid = binary_labels(np.arange(19, dtype=np.uint8).reshape(1, 19))
         self.assertEqual(np.flatnonzero(gt).tolist(), [1, 2, 4, 5, 6, 7, 10, 11, 12])
