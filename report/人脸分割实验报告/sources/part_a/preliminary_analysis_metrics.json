@@ -1,0 +1,38 @@
+{
+  "analysis_scope": "descriptive training statistics only; no rule or k selected",
+  "training_images": 98,
+  "selected_pixels": 6387552,
+  "skin_pixels": 5838561,
+  "nose_pixels": 548991,
+  "covariance_cr_cb_ddof0": -67.95453964528198,
+  "correlation_cr_cb": -0.7643626738313478,
+  "per_image_counts": {
+    "min": 30666,
+    "median": 65139.5,
+    "max": 92562,
+    "min_weight": 0.004800900250988172,
+    "max_weight": 0.01449099749011828
+  },
+  "illustrative_rectangle_coverage": [
+    {
+      "k_for_illustration_only": 1,
+      "training_skin_pixels_inside": 3779776,
+      "fraction": 0.5917409361207548
+    },
+    {
+      "k_for_illustration_only": 2,
+      "training_skin_pixels_inside": 5867435,
+      "fraction": 0.9185733439038931
+    },
+    {
+      "k_for_illustration_only": 3,
+      "training_skin_pixels_inside": 6346575,
+      "fraction": 0.9935848663149827
+    }
+  ],
+  "source_sha256": {
+    "histograms.npz": "507faa65f20788a9d5c28d3631fad913b78392ebda5684e332c3832393d81a28",
+    "per_image_counts.csv": "dc1a1d1cccd70b0dc746899847646e53df93b32fe6a2484f0bb8c647c6ba7e38"
+  },
+  "parameter_file_sha256": "66219e403e334f6830d95cf1151f371c06ebaf62535e88b89d0ef1dd5959d3ac"
+}

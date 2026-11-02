@@ -10,8 +10,13 @@
   "retained_original_figure_9": "逐图F1散点与累积分布，展示均值和中位数以外的信息",
   "original_figure_10": "只保留逐图边界分布，删除由混淆计数表换算的重复柱状图",
   "four_case_comparisons_preserved": true,
-  "report_figures": 13,
+  "report_figures": 16,
   "fp_table_rows": 8,
   "previous_figures_preserved_locally": true,
-  "supplementary_figures": "保留四个新旧掩膜与误差空间对照，以及逐图配对散点，不绘制重复总体指标与类别计数的柱状图。"
+  "supplementary_figures": "保留四个新旧掩膜与误差空间对照，以及逐图配对散点，不绘制重复总体指标与类别计数的柱状图。",
+  "part_a_added_figures": {
+    "part_a_label_review_00546": "说明原始多类别标签与人工核查方式",
+    "part_a_channel_distributions": "展示训练肤色的集中区域、离散程度与尾部",
+    "part_a_joint_distribution": "展示Cr与Cb的联合分布与负相关关系"
+  }
 }

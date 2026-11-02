@@ -23,18 +23,20 @@
 \inst{}
 \major{}
 \date{2026 年 11 月 2 日}
-\hypersetup{pdftitle={基于颜色的人脸分割},pdfauthor={},pdfsubject={颜色分割算法、独立测试与结果分析}}
+\hypersetup{pdftitle={基于颜色的人脸分割},pdfauthor={},pdfsubject={数据准备、肤色统计、颜色分割与独立测试}}
 \graphicspath{{images/}}
 \begin{document}
+\hypersetup{pageanchor=false}
 \cover
 \thispagestyle{empty}
 \clearpage
 \pagenumbering{Roman}
+\hypersetup{pageanchor=true}
 \tableofcontents
 \clearpage
 \pagenumbering{arabic}
 \input{sections/background}
-\clearpage
+\FloatBarrier
 \input{sections/method_validation}
 \FloatBarrier
 \input{sections/test_analysis}

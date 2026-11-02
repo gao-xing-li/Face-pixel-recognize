@@ -1,0 +1,156 @@
+\section{颜色模型与初版方案}\label{sec:model}
+
+\subsection{颜色空间与丢弃 Y 的代价}
+
+YCbCr 把亮度与色度分开。按 ITU-R BT.601，RGB 到 YCbCr 的常用形式为
+\begin{equation}
+\begin{aligned}
+Y &= 0.299R + 0.587G + 0.114B,\\
+Cr &= 0.713(R-Y) + 128,\\
+Cb &= 0.564(B-Y) + 128.
+\end{aligned}
+\label{eq:ycbcr}
+\end{equation}
+OpenCV 的整数实现与上式略有差异，但通道顺序与含义一致：Y、Cr、Cb，8 位编码 0--255。实现按 BGR 读图，用 \texttt{COLOR\_BGR2YCrCb} 转换，不做缩放、白平衡或颜色增强。
+
+只用 Cr、Cb 的理由是肤色在色度平面上比在 RGB 中更集中，亮度变化主要落在 Y 上\cite{hsu2002face,vezhnevets2003survey}。代价是丢掉了 Y 中的明暗线索：深色头发和皮肤在色度上可能接近，但在亮度上差别明显。00718 后来正暴露出这一代价；这是当时就知道、但接受了的取舍。
+
+\subsection{训练肤色统计}
+
+从 98 张训练图取皮肤与鼻子像素，共 $5{,}838{,}561+548{,}991=6{,}387{,}552$ 个。所有像素等权，不随机抽样，也不先求各图均值再平均；脸部面积大的图像贡献更多像素。对通道 $c\in\{Cr,Cb\}$，均值与总体方差为
+\begin{equation}
+\mu_c=\frac{1}{N}\sum_{i=1}^{N}c_i,\qquad
+\sigma_c^2=\frac{1}{N}\sum_{i=1}^{N}(c_i-\mu_c)^2,
+\label{eq:stats}
+\end{equation}
+其中 $N=6{,}387{,}552$。计算结果如表~\ref{tab:skin} 上半部分。两通道标准差都约为 9.4，离散尺度接近；这并不表示分类能力相同，因为统计里没有负类。
+
+\begin{table}[H]
+\centering\small
+\caption{训练肤色统计与阈值覆盖}\label{tab:skin}
+\begin{tabular}{lrrr}
+\toprule
+通道 & 均值 & 总体方差 & 标准差 \\
+\midrule
+Cr & 151.1495 & 87.8810 & 9.3745 \\
+Cb & 109.1102 & 89.9380 & 9.4836 \\
+\bottomrule
+\end{tabular}
+
+\vspace{6pt}
+\begin{tabular}{lrrr}
+\toprule
+阈值系数 $k$ & 1.00 & 2.00 & 3.00 \\
+范围内训练肤色像素占比 & 59.17\% & 91.86\% & 99.36\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{代码 3-1}\quad 训练肤色的直方图统计（modeling.py）
+\begin{lstlisting}
+mask = (labels == 1) | (labels == 2)
+ycrcb = cv2.cvtColor(bgr, cv2.COLOR_BGR2YCrCb)
+cr = ycrcb[:, :, 1][mask].astype(np.int64)
+
+counts = np.bincount(cr, minlength=256)
+n = counts.sum()
+values = np.arange(256, dtype=np.float64)
+mean = np.dot(values, counts) / n
+std = np.sqrt(np.dot((values - mean) ** 2, counts) / n)
+\end{lstlisting}
+
+这段代码先在每张训练图上取皮肤与鼻子像素，累计 256 维直方图，再跨图求和。因为统计对象是直方图而不是逐图像均值，每个像素的权重相同；脸部面积大的图像自然贡献更多像素。方差除以 $N$ 而不是 $N-1$，对应总体方差；$\sigma$ 由方差开方得到，阈值中使用的是 $\sigma$。
+
+联合分布见图~\ref{fig:joint}。高频区域呈倾斜椭圆，按像素频数计算的相关系数约为 $-0.7644$，协方差为 $-67.95$：Cr 较大的像素往往对应较小的 Cb。若分别限制两个通道，得到的是轴对齐矩形；它无法贴合倾斜的分布，四角会包含肤色之外的组合，倾斜方向上的肤色又可能被切掉。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.74\textwidth]{part_a_joint_distribution.png}
+\caption{训练肤色像素的 Cr/Cb 联合分布。横轴为 Cb，纵轴为 Cr；颜色表示对应整数取值组合的像素数，采用对数刻度。}
+\label{fig:joint}
+\end{figure}
+
+这个数还有一个用途：估计阈值覆盖了多少训练肤色。表~\ref{tab:skin} 下半部分给出 $k=1,2,3$ 的覆盖比例。$k=1$ 时矩形只覆盖 59.17\%，$k=2$ 才到 91.86\%。也就是说，最终选的 $k=1.25$ 不是“肤色范围”，而是一个偏精确率的切片：$k=1$ 时就已经只覆盖 59.17\% 的训练肤色，$k=1.25$ 也远没有覆盖全部。它同时解释了两件事：初版的召回为什么上不去，以及低亮度图像为什么一收紧就掉得厉害。
+
+\subsection{判决规则与验证选参}
+
+对每个像素，同时满足式~\eqref{eq:box} 时记为候选前景：
+\begin{equation}
+M(x,y)=
+\begin{cases}
+1, & |Cr(x,y)-\mu_{Cr}|\leq k\sigma_{Cr}\ \text{且}\ |Cb(x,y)-\mu_{Cb}|\leq k\sigma_{Cb},\\
+0, & \text{其他情况}.
+\end{cases}
+\label{eq:box}
+\end{equation}
+实现中先转浮点再作差，包含边界；不对每张图像重新估计参数。
+
+颜色候选还需要空间处理。脸部真值包括眼睛、眉毛、口腔与嘴唇，这些位置未必满足肤色范围，容易形成空洞；与脸部分离的类肤色背景则可以通过连通域筛选排除。最终方案先按 8 连通保留面积最大的前景块，再填充不与图像外部背景 4 连通的内部空洞。
+
+\noindent\textbf{代码 3-2}\quad 阈值判决与填孔（detection.py）
+\begin{lstlisting}
+converted = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2YCrCb).astype(np.float64)
+cr, cb = converted[:, :, 1], converted[:, :, 2]
+mask = ((np.abs(cr - mean_cr) <= k * std_cr) &
+        (np.abs(cb - mean_cb) <= k * std_cb)).astype(np.uint8)
+
+def fill_holes(mask):
+    padded = np.pad(mask.astype(np.uint8), 1)
+    cv2.floodFill(padded, None, (0, 0), 2, flags=4)
+    return (padded[1:-1, 1:-1] != 2).astype(np.uint8)
+\end{lstlisting}
+
+这段代码有两个细节。第一，相减前先转成浮点，避免 \texttt{uint8} 回绕；比较使用 \texttt{<=}，边界像素算作候选。第二，填孔先在外围补一圈零，再从 \texttt{(0,0)} 出发按 4 连通把外部背景标成 2；没有被标到的零像素就是被前景围住的洞，最后统一置 1。补零保证即使目标贴着图像边缘，外部种子仍然有效。
+
+验证集 32 张，比较 9 个 $k$（1 到 3，步长 0.25）与 4 种处理（无、填孔、最大区域加填孔、闭运算后最大区域加填孔），共 36 组。主指标是全局 F1；平局先选更简单的处理，再选较小的 $k$。计划在运行前写入配置文件。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{validation_curve.png}
+\caption{四种处理方式在验证集上的参数曲线。横轴为颜色阈值系数 $k$，纵轴为全局 F1。}
+\label{fig:curve}
+\end{figure}
+
+图~\ref{fig:curve} 有两个特征。第一，1.25 到 1.5 之间几乎是平台，两者相差不到 0.5 个百分点；最终选 1.25，一部分原因是平局规则，一部分原因是更小的 $k$ 在测试前更保守。第二，$k$ 超过 1.5 后 F1 断崖式下降：颜色范围一放宽，头发和背景就被并进最大连通域，F1 从 72 降到 65、再到 59。失效是结构性的，不是渐进的精度损失。
+
+在相同 $k=1.25$ 下比较四种后处理，结果如表~\ref{tab:post}。填孔把 F1 从 56.13 拉到 69.10，是收益最大的一步；最大连通域再加 3.60 个点；闭运算反而低 0.71 个点。我们原本更看好闭运算，觉得它才像“把眉眼补上”，但它在验证集上不如填孔。原因后来在补全实验里才想清楚：闭运算先改变连通性，会把脸和脖子、头发粘在一起，最大区域更容易选错；填孔只填被围住的洞，不动外轮廓。
+
+\begin{table}[H]
+\centering\small
+\caption{相同颜色阈值下四种后处理的验证结果，单位为百分比}\label{tab:post}
+\begin{tabular}{lrrrr}
+\toprule
+后处理 & Precision & Recall & F1 & IoU \\
+\midrule
+无处理 & 52.43 & 60.39 & 56.13 & 39.01 \\
+填孔 & 58.34 & 84.71 & 69.10 & 52.78 \\
+最大连通域加填孔 & 64.86 & 82.70 & 72.70 & 57.11 \\
+闭运算后最大区域加填孔 & 63.39 & 83.30 & 71.99 & 56.24 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+最终固定 $k=1.25$、最大连通域加填孔，记为初版方案。它在验证集上的 P/R/F1/IoU 为 64.86/82.70/72.70/57.11。这个配置随后只运行一次测试，结果见第~\ref{sec:test}~章。
+
+\subsection{设计取舍}
+
+表~\ref{tab:tradeoff} 列出当时主动放弃的几种做法。它们不是事后补的理由，而是当时的设计边界；第~\ref{sec:test}~章与第~\ref{sec:completion}~章的失败会逐一回到这些边界上。
+
+\begin{table}[H]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\caption{设计取舍与后来看到的代价}\label{tab:tradeoff}
+\begin{tabular}{p{3.1cm}p{5.0cm}p{6.2cm}}
+\toprule
+放弃的做法 & 原因 & 后来看到的代价 \\
+\midrule
+使用 Y 通道 & 让阈值只管颜色，减少曝光影响 & 深色头发与皮肤难分（00718） \\
+逐图自适应阈值 & 保持一个全局模型，避免每图调参 & 偏色图像无法自救（00609） \\
+椭圆或马氏距离 & 实现简单、结果可解释 & 矩形四角包含非肤色；$-0.76$ 的相关性未利用 \\
+深度分割模型 & 课程目标与可解释性 & 语义鸿沟只能靠后处理绕开 \\
+多人处理 & 数据中没有多人标注 & 最大连通域只保留一个主体 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+其中“椭圆或马氏距离”值得多说一句。RGB 规则更简单，但三个通道都混有亮度信息\cite{kovac2003skin}；椭圆边界不需要更换颜色空间，只需在均值、标准差之外增加一个相关系数，就能利用 $-0.76$ 的联合关系。本实验没有实现它，因此不能给出它可能带来的提升；这里只把它作为由数据直接支持的一个判断记录下来。

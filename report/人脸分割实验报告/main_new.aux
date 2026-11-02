@@ -1,0 +1,131 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand*\HyPL@Entry[1]{}
+\HyPL@Entry{0<</S/D>>}
+\HyPL@Entry{1<</S/R>>}
+\HyPL@Entry{4<</S/D>>}
+\@writefile{toc}{\contentsline {section}{\numberline {1}问题与路线}{1}{section.1}\protected@file@percent }
+\newlabel{sec:intro}{{1}{1}{问题与路线}{section.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}任务与边界}{1}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}三个问题}{1}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}证据状态与章节安排}{1}{subsection.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}数据与评价口径}{2}{section.2}\protected@file@percent }
+\newlabel{sec:data}{{2}{2}{数据与评价口径}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}数据来源与筛选}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}划分与泄漏检查}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}两套标签：建模用皮肤，评价用整脸}{2}{subsection.2.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces 原始标签在颜色统计与脸部评价中的用途\relax }}{2}{table.caption.3}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:labels}{{1}{2}{原始标签在颜色统计与脸部评价中的用途\relax }{table.caption.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces 样本 00546 的原图、原始多类别标签及叠加核查图。彩色区域来自已有标签，用于检查标注对应关系，并非算法预测。\relax }}{3}{figure.caption.4}\protected@file@percent }
+\newlabel{fig:label}{{1}{3}{样本 00546 的原图、原始多类别标签及叠加核查图。彩色区域来自已有标签，用于检查标注对应关系，并非算法预测。\relax }{figure.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}指标：为什么不能只看 Accuracy}{3}{subsection.2.4}\protected@file@percent }
+\citation{hsu2002face}
+\citation{vezhnevets2003survey}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces 不同预测方式在测试集上的指标对照，单位为百分比\relax }}{4}{table.caption.5}\protected@file@percent }
+\newlabel{tab:trivial}{{2}{4}{不同预测方式在测试集上的指标对照，单位为百分比\relax }{table.caption.5}{}}
+\newlabel{eq:metrics}{{1}{4}{指标：为什么不能只看 Accuracy}{equation.2.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}颜色模型与初版方案}{4}{section.3}\protected@file@percent }
+\newlabel{sec:model}{{3}{4}{颜色模型与初版方案}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}颜色空间与丢弃 Y 的代价}{4}{subsection.3.1}\protected@file@percent }
+\newlabel{eq:ycbcr}{{2}{4}{颜色空间与丢弃 Y 的代价}{equation.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}训练肤色统计}{5}{subsection.3.2}\protected@file@percent }
+\newlabel{eq:stats}{{3}{5}{训练肤色统计}{equation.3.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces 训练肤色统计与阈值覆盖\relax }}{5}{table.caption.6}\protected@file@percent }
+\newlabel{tab:skin}{{3}{5}{训练肤色统计与阈值覆盖\relax }{table.caption.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces 训练肤色像素的 Cr/Cb 联合分布。横轴为 Cb，纵轴为 Cr；颜色表示对应整数取值组合的像素数，采用对数刻度。\relax }}{6}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:joint}{{2}{6}{训练肤色像素的 Cr/Cb 联合分布。横轴为 Cb，纵轴为 Cr；颜色表示对应整数取值组合的像素数，采用对数刻度。\relax }{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}判决规则与验证选参}{6}{subsection.3.3}\protected@file@percent }
+\newlabel{eq:box}{{4}{6}{判决规则与验证选参}{equation.3.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces 四种处理方式在验证集上的参数曲线。横轴为颜色阈值系数 $k$，纵轴为全局 F1。\relax }}{7}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:curve}{{3}{7}{四种处理方式在验证集上的参数曲线。横轴为颜色阈值系数 $k$，纵轴为全局 F1。\relax }{figure.caption.8}{}}
+\citation{kovac2003skin}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces 相同颜色阈值下四种后处理的验证结果，单位为百分比\relax }}{8}{table.caption.9}\protected@file@percent }
+\newlabel{tab:post}{{4}{8}{相同颜色阈值下四种后处理的验证结果，单位为百分比\relax }{table.caption.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}设计取舍}{8}{subsection.3.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces 设计取舍与后来看到的代价\relax }}{8}{table.caption.10}\protected@file@percent }
+\newlabel{tab:tradeoff}{{5}{8}{设计取舍与后来看到的代价\relax }{table.caption.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}初版方案的独立测试}{8}{section.4}\protected@file@percent }
+\newlabel{sec:test}{{4}{8}{初版方案的独立测试}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}测试设置}{8}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}总体结果}{9}{subsection.4.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces 测试集总体指标，单位为百分比\relax }}{9}{table.caption.11}\protected@file@percent }
+\newlabel{tab:test}{{6}{9}{测试集总体指标，单位为百分比\relax }{table.caption.11}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces 测试集混淆计数\relax }}{9}{table.caption.12}\protected@file@percent }
+\newlabel{tab:testcounts}{{7}{9}{测试集混淆计数\relax }{table.caption.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}提升来自哪一步}{10}{subsection.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces 固定流程各阶段的测试结果，指标单位为百分比\relax }}{10}{table.caption.13}\protected@file@percent }
+\newlabel{tab:stage}{{8}{10}{固定流程各阶段的测试结果，指标单位为百分比\relax }{table.caption.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}误检从哪里来}{10}{subsection.4.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces 最终误检的语义来源与五官召回\relax }}{11}{table.caption.14}\protected@file@percent }
+\newlabel{tab:errors}{{9}{11}{最终误检的语义来源与五官召回\relax }{table.caption.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}逐图稳定性与亮度条件}{11}{subsection.4.5}\protected@file@percent }
+\citation{cheng2021boundary}
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces 逐图指标、边界质量与亮度分组\relax }}{12}{table.caption.15}\protected@file@percent }
+\newlabel{tab:perimage}{{10}{12}{逐图指标、边界质量与亮度分组\relax }{table.caption.15}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces 逐图 F1 比较与累积分布。左图每个点对应一张测试图，虚线上方表示初版更高；右图为 F1 累积分布。\relax }}{13}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:stability}{{4}{13}{逐图 F1 比较与累积分布。左图每个点对应一张测试图，虚线上方表示初版更高；右图为 F1 累积分布。\relax }{figure.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}三类失败}{13}{subsection.4.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces 00609 的原图、真值、初版预测与误差对照。颜色候选不足导致大面积漏检。\relax }}{13}{figure.caption.17}\protected@file@percent }
+\newlabel{fig:00609}{{5}{13}{00609 的原图、真值、初版预测与误差对照。颜色候选不足导致大面积漏检。\relax }{figure.caption.17}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces 00718 的原图、真值、初版预测与误差对照。头发被选为主要候选，填孔扩大了误检。\relax }}{14}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:00718}{{6}{14}{00718 的原图、真值、初版预测与误差对照。头发被选为主要候选，填孔扩大了误检。\relax }{figure.caption.18}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}补全尝试与再次评价}{14}{section.5}\protected@file@percent }
+\newlabel{sec:completion}{{5}{14}{补全尝试与再次评价}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}从失败分析到可检验的假设}{14}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}补全流程与核的选择}{15}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}验证集上的取舍}{16}{subsection.5.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces 补全前后的验证结果，单位为百分比\relax }}{16}{table.caption.19}\protected@file@percent }
+\newlabel{tab:v2val}{{11}{16}{补全前后的验证结果，单位为百分比\relax }{table.caption.19}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}同一批测试图上的再次评价}{16}{subsection.5.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces 补全前后的测试结果，单位为百分比\relax }}{16}{table.caption.20}\protected@file@percent }
+\newlabel{tab:v2test}{{12}{16}{补全前后的测试结果，单位为百分比\relax }{table.caption.20}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces 新增前景像素的来源\relax }}{17}{table.caption.21}\protected@file@percent }
+\newlabel{tab:newpixels}{{13}{17}{新增前景像素的来源\relax }{table.caption.21}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}收益与代价的图像对照}{17}{subsection.5.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces 00570 的初版与补全后预测对照。嘴部缺口减少，额头与眼周仍有漏检。\relax }}{18}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:00570}{{7}{18}{00570 的初版与补全后预测对照。嘴部缺口减少，额头与眼周仍有漏检。\relax }{figure.caption.22}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces 00537 找回最多的脸部像素，同时扩大了脸侧误检。\relax }}{19}{figure.caption.23}\protected@file@percent }
+\newlabel{fig:00537}{{8}{19}{00537 找回最多的脸部像素，同时扩大了脸侧误检。\relax }{figure.caption.23}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces 00578 中头发误检扩大，脸部主体仍然缺失。\relax }}{20}{figure.caption.24}\protected@file@percent }
+\newlabel{fig:00578}{{9}{20}{00578 中头发误检扩大，脸部主体仍然缺失。\relax }{figure.caption.24}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}这次尝试改变了什么，没有改变什么}{20}{subsection.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}颜色模型的能力边界与适用范围}{21}{section.6}\protected@file@percent }
+\newlabel{sec:boundary}{{6}{21}{颜色模型的能力边界与适用范围}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}方法的实际构成}{21}{subsection.6.1}\protected@file@percent }
+\newlabel{subsec:composition}{{6.1}{21}{方法的实际构成}{subsection.6.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}三个工作点}{21}{subsection.6.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces 三种方案在测试集上的位置与证据状态\relax }}{22}{table.caption.25}\protected@file@percent }
+\newlabel{tab:points}{{14}{22}{三种方案在测试集上的位置与证据状态\relax }{table.caption.25}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces 三种方案在测试集上的精确率—召回率位置。实心点为独立测试，空心点为开发后对比；虚线为 F1 等值线。\relax }}{22}{figure.caption.26}\protected@file@percent }
+\newlabel{fig:pr}{{10}{22}{三种方案在测试集上的精确率—召回率位置。实心点为独立测试，空心点为开发后对比；虚线为 F1 等值线。\relax }{figure.caption.26}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}有效性的来源}{22}{subsection.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}失效的来源}{23}{subsection.6.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces 失效的四类来源\relax }}{23}{table.caption.27}\protected@file@percent }
+\newlabel{tab:failure}{{15}{23}{失效的四类来源\relax }{table.caption.27}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}适用条件}{24}{subsection.6.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces 适用条件与实验依据\relax }}{25}{table.caption.28}\protected@file@percent }
+\newlabel{tab:applicability}{{16}{25}{适用条件与实验依据\relax }{table.caption.28}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.6}与其他颜色方法的关系}{25}{subsection.6.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.7}小结}{26}{subsection.6.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}结论与反思}{26}{section.7}\protected@file@percent }
+\newlabel{sec:conclusion}{{7}{26}{结论与反思}{section.7}{}}
+\bibcite{hsu2002face}{1}
+\bibcite{vezhnevets2003survey}{2}
+\bibcite{kovac2003skin}{3}
+\bibcite{cheng2021boundary}{4}
+\gdef \@abspage@last{31}

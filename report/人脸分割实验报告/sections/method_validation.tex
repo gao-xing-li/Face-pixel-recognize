@@ -1,21 +1,7 @@
 \section{分割算法与验证选参}
 \subsection{颜色阈值与区域处理}
 
-分割从原图的颜色开始。输入图像保持原始尺寸，以 BGR 顺序读取为 8 位整数，再通过 OpenCV 的颜色转换得到 Y、Cr、Cb。采用从 98 张训练图中提取的 6,387,552 个皮肤与鼻子像素作为颜色统计依据，参数如表~\ref{tab:skinparams} 所示。
-
-\begin{table}[H]
-\centering
-\small
-\caption{检测器使用的训练统计参数}\label{tab:skinparams}
-\begin{tabular}{lrr}
-\toprule
-通道 & 均值 & 标准差 \\
-\midrule
-Cr & 151.14949561 & 9.37448409 \\
-Cb & 109.11018055 & 9.48356505 \\
-\bottomrule
-\end{tabular}
-\end{table}
+分割沿用前述读图与颜色转换方式，使用表~\ref{tab:skinparams} 中从训练集估计的均值与标准差。检测时不重新拟合参数，所有图像共用同一组训练统计。
 
 对每个像素，同时满足式~\eqref{eq:colorbox} 时记为候选前景。系数 $k$ 控制颜色范围，范围扩大后可以保留更多脸部像素，同时也会纳入更多相近颜色的区域。
 \begin{equation}
