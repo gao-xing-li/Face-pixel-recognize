@@ -1,0 +1,22 @@
+{
+  "split": "validation",
+  "metric": "global.f1",
+  "k_values": [
+    1,
+    1.25,
+    1.5,
+    1.75,
+    2,
+    2.25,
+    2.5,
+    2.75,
+    3
+  ],
+  "postprocess_values": [
+    "none",
+    "fill",
+    "largest_fill",
+    "close_largest_fill"
+  ],
+  "closing_kernel": 5
+}

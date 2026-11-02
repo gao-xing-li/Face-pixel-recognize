@@ -1,10 +1,13 @@
 """Manifest and mask readers. All relative paths use the CSV's parent directory."""
 
 import csv
+import json
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
+
+PROJECT = Path(__file__).resolve().parents[2]
 
 
 def _read_csv(path: Path, required: set[str]) -> list[dict]:
@@ -67,3 +70,28 @@ def read_binary_mask(path, encoding: str = "binary01") -> np.ndarray:
     if mask.ndim != 2 or mask.dtype.kind not in "bui" or not np.isin(mask, (0, high)).all():
         raise ValueError(f"{path}: expected a 2-D {encoding} mask; normalize raw labels explicitly")
     return (mask != 0).astype(np.uint8)
+
+
+def read_json(path):
+    return json.loads(Path(path).read_text(encoding="utf-8-sig"))
+
+
+def write_json(path, value):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+
+
+def write_csv(path, rows):
+    with Path(path).open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def read_bgr(path):
+    import cv2
+    image = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_COLOR)
+    if image is None:
+        raise ValueError(f"Cannot read image: {path}")
+    return image

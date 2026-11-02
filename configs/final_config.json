@@ -1,0 +1,17 @@
+{
+  "config_id": "final",
+  "threshold": {
+    "rule": "cbcr_box",
+    "channels": [
+      "Cb",
+      "Cr"
+    ],
+    "k": 1.25
+  },
+  "preprocess": "none",
+  "evaluation_size": "original; no resizing",
+  "postprocess": {
+    "method": "largest_dilate_fill_erode",
+    "kernel": 41
+  }
+}

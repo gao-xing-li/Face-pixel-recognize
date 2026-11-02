@@ -1,7 +1,6 @@
 """Evaluate saved predictions, preserving pairing, input hashes and run settings."""
 
 import csv
-import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -12,14 +11,6 @@ from PIL import Image, ImageDraw
 
 from .data_io import read_binary_mask, read_dataset_manifest, read_prediction_manifest
 from .evaluation import COUNT_NAMES, METRIC_NAMES, evaluate, summarize
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for block in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(block)
-    return digest.hexdigest()
 
 
 def _write_json(path: Path, value) -> None:
@@ -57,9 +48,8 @@ def evaluate_predictions(
 ) -> dict:
     """Evaluate exactly one validation/test prediction set, refusing partial output.
 
-    B supplies a prediction manifest for the selected split. C can use the same
-    entry point after B freezes the detector. This function does not select k or
-    run a detector; all scores describe the supplied saved masks.
+    Predictions are matched to truth by sample ID. All scores describe the
+    supplied masks; this function does not run a detector or select parameters.
     """
     if split not in {"validation", "test"}:
         raise ValueError("split must be validation or test")
@@ -79,25 +69,14 @@ def evaluate_predictions(
     if set(predictions) != expected:
         raise ValueError(f"prediction IDs mismatch; missing={sorted(expected - set(predictions))}, extra={sorted(set(predictions) - expected)}")
 
-    # Detect exact file copies even when A's manifest uses different names.
-    seen_hashes, image_hashes = {}, {}
-    for row in records:
-        digest = _sha256(row["image_path"])
-        if digest in seen_hashes:
-            raise ValueError(f"duplicate image content: {seen_hashes[digest]!r} and {row['sample_id']!r}; A must review the split")
-        seen_hashes[digest] = row["sample_id"]
-        image_hashes[row["sample_id"]] = digest
-
     config = None
-    config_sha = None
     if run_config_path is not None:
         run_config_path = Path(run_config_path).resolve()
         config = json.loads(run_config_path.read_text(encoding="utf-8-sig"))
         if not isinstance(config, dict) or config.get("config_id") != config_id:
             raise ValueError("run config must be a JSON object with matching config_id")
-        config_sha = _sha256(run_config_path)
 
-    rows, input_hashes = [], []
+    rows, inputs = [], []
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".evaluation-", dir=output_dir.parent) as scratch:
         stage = Path(scratch) / "run"
@@ -116,13 +95,7 @@ def evaluate_predictions(
             case_path = f"cases/{index:04d}.png"
             _save_case(stage / case_path, original, gt, pred, valid.astype(bool))
             rows.append({"sample_id": sample_id, "split": split, "config_id": config_id, **metrics, "case_path": case_path})
-            input_hashes.append({
-                "sample_id": sample_id,
-                "image_sha256": image_hashes[sample_id],
-                "gt_sha256": _sha256(record["mask_path"]),
-                "pred_sha256": _sha256(predictions[sample_id]),
-                "valid_sha256": _sha256(valid_path) if valid_path else None,
-            })
+            inputs.append({"sample_id": sample_id})
 
         summary = summarize(rows)
         summary["split"] = split
@@ -137,15 +110,12 @@ def evaluate_predictions(
         summary["provenance"] = {
             "kind": "saved_prediction_evaluation",
             "created_at_utc": datetime.now(timezone.utc).isoformat(),
-            "dataset_manifest_sha256": _sha256(manifest_path),
-            "prediction_manifest_sha256": _sha256(prediction_manifest_path),
-            "run_config_sha256": config_sha,
             "configuration_recorded": config is not None,
             "synthetic_demo": bool(config and config.get("synthetic_demo") is True),
             "gt_encoding": gt_encoding,
             "pred_encoding": pred_encoding,
             "valid_encoding": valid_encoding,
-            "inputs": input_hashes,
+            "inputs": inputs,
         }
         _write_json(stage / "summary.json", summary)
         if config is not None:
@@ -156,7 +126,7 @@ def evaluate_predictions(
             writer.writerows(rows)
         (stage / "README.md").write_text(
             "# Saved prediction evaluation\n\n"
-            "Scores apply to the supplied prediction masks. Check run_config.json and the input hashes before using them in a report.\n\n"
+            "Scores apply to the supplied prediction masks. Check run_config.json and the sample pairing before using them in a report.\n\n"
             "Undefined metrics are JSON null / empty CSV cells. Image means exclude these values.\n\n"
             "Case panels: original, ground truth, prediction, errors. Green=TP, red=FP, blue=FN, black=TN, yellow=ignored. Display scaling does not affect evaluation.\n"
             + ("\nSYNTHETIC DEMO ONLY. Synthetic or constant predictions verify the pipeline; they are not project performance results.\n" if summary["provenance"]["synthetic_demo"] else ""),

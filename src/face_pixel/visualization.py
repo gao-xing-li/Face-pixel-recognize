@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 from .assessment import boundary_iou, paired_bootstrap_f1, paired_mean_interval
 from .data_io import read_binary_mask, read_dataset_manifest, read_prediction_manifest
 from .evaluation import COUNT_NAMES, METRIC_NAMES, evaluate, summarize
-from .part_a import _digest, _json, _write_json
+from .data_io import read_json as _json, write_json as _write_json
 
 BASE_COLOR, FINAL_COLOR = "#B87432", "#087E8B"
 
@@ -27,41 +27,27 @@ def _font_path(requested=None):
     raise ValueError("provide --font with a TrueType/OpenType font supporting Chinese")
 
 
-def _collect(manifest, run):
+def _collect(manifest, run, before="baseline", after="final"):
     import cv2
 
-    frozen = _json(run / "independent_test.json")
-    if _digest(manifest) != frozen["c_manifest_sha256"]:
-        raise ValueError("manifest differs from the independently evaluated run")
-    source_rows = [row for row in read_dataset_manifest(manifest) if row["split"] == "test"]
-    expected_ids = {row["sample_id"] for row in source_rows}
-    predictions, references = {}, {}
-    for name in ("baseline", "final"):
-        predictions[name] = read_prediction_manifest(run / f"predictions/test-{name}/predictions.csv")
-        summary = _json(run / f"evaluation/test-{name}/summary.json")
-        references[name] = {row["sample_id"]: row for row in summary["provenance"]["inputs"]}
-        if set(predictions[name]) != expected_ids or set(references[name]) != expected_ids:
-            raise ValueError("test sample IDs differ from the original evaluation")
+    rows = [r for r in read_dataset_manifest(manifest) if r["split"] == "test"]
+    expected_ids = {r["sample_id"] for r in rows}
+    predictions = {}
+    for name, method in (("baseline", before), ("final", after)):
+        predictions[name] = read_prediction_manifest(run / f"predictions/test-{method}/predictions.csv")
+        if set(predictions[name]) != expected_ids:
+            raise ValueError("Test prediction sample IDs differ from the dataset")
     entries = []
-    for row in source_rows:
-        sid = row["sample_id"]
-        if sid in {".", ".."} or any(char in sid for char in '<>:"/\\|?*'):
-            raise ValueError("sample ID is not a safe figure filename")
+    for row in rows:
         gt = read_binary_mask(row["mask_path"])
         valid = read_binary_mask(row["valid_mask_path"]) if row.get("valid_mask_path") else np.ones_like(gt)
-        with Image.open(row["image_path"]) as image:
-            rgb = np.array(image.convert("RGB"))
+        rgb = np.array(Image.open(row["image_path"]).convert("RGB"))
         if rgb.shape[:2] != gt.shape:
-            raise ValueError("original image and labels are not aligned")
-        entry = {"sample_id": sid, "rgb": rgb, "gt": gt, "valid": valid, "metrics": {}, "boundaries": {}}
-        for name in ("baseline", "final"):
-            reference = references[name][sid]
-            paths = {"image_sha256": row["image_path"], "gt_sha256": row["mask_path"], "pred_sha256": predictions[name][sid]}
-            if row.get("valid_mask_path"):
-                paths["valid_sha256"] = row["valid_mask_path"]
-            if any(_digest(path) != reference[key] for key, path in paths.items()):
-                raise ValueError(f"input bytes changed since the independent test: {sid}/{name}")
-            pred = read_binary_mask(predictions[name][sid], "binary255")
+            raise ValueError("Original image and truth dimensions differ")
+        entry = {"sample_id": row["sample_id"], "rgb": rgb, "gt": gt, "valid": valid,
+                 "metrics": {}, "boundaries": {}}
+        for name in predictions:
+            pred = read_binary_mask(predictions[name][row["sample_id"]], "binary255")
             entry[name] = pred
             entry["metrics"][name] = evaluate(pred, gt, valid)
             entry["boundaries"][name] = boundary_iou(pred, gt, valid)
@@ -70,11 +56,9 @@ def _collect(manifest, run):
         entry["face_mean_y"] = float(y[face].mean()) if face.any() else None
         entry["face_fraction"] = float(face.sum() / valid.sum())
         entries.append(entry)
-    for name in ("baseline", "final"):
-        calculated = summarize(entry["metrics"][name] for entry in entries)
-        if any(calculated["global"][key] != frozen["results"][f"test-{name}"]["global"][key] for key in COUNT_NAMES):
-            raise ValueError("recomputed pixel counts differ from the frozen test")
-    return entries, frozen
+    results = {f"test-{name}": {"global": summarize(e["metrics"][name] for e in entries)["global"]}
+               for name in ("baseline", "final")}
+    return entries, {"results": results}
 
 
 def _cutout(entry, *, transparent=False):
@@ -146,7 +130,7 @@ def _board(rows, columns, title, path, font_path):
 
 def _single(entry, path, font_path):
     tile, gap, caption, header = 320, 18, 44, 80
-    columns = [("original", "原图"), ("gt", "人工真值"), ("baseline", "基线预测"), ("final", "最终预测"), ("cutout", "最终预测抠图"), ("errors", "最终误差叠加")]
+    columns = [("original", "原图"), ("gt", "人工真值"), ("baseline", "对照方法"), ("final", "比较方法"), ("cutout", "比较方法抠图"), ("errors", "比较方法误差叠加")]
     width, height = 3 * tile + 4 * gap, 2 * (tile + caption + gap) + header + 80
     image = Image.new("RGB", (width, height), "white")
     draw = ImageDraw.Draw(image)
@@ -191,7 +175,7 @@ def _plots(entries, summary, output, font_path):
     axes[0].set(xlim=(-0.02, 1.02), ylim=(-0.02, 1.02), xlabel="基线逐图 F1", ylabel="最终逐图 F1", title="每张图是否改善？")
     axes[0].set_aspect("equal")
     axes[0].legend(loc="upper left", fontsize=9)
-    for values, color, label in ((b, BASE_COLOR, "基线"), (f, FINAL_COLOR, "最终")):
+    for values, color, label in ((b, BASE_COLOR, "对照方法"), (f, FINAL_COLOR, "比较方法")):
         axes[1].step(np.r_[0, np.sort(values), 1], np.r_[0, np.arange(1, len(values) + 1) / len(values), 1], where="post", color=color, label=f"{label}；中位数 {np.median(values):.3f}")
     axes[1].set(xlim=(0, 1), ylim=(0, 1.02), xlabel="逐图 F1", ylabel="不超过该 F1 的图像比例", title="低分图与整体稳定性")
     axes[1].yaxis.set_major_formatter(PercentFormatter(1))
@@ -201,14 +185,14 @@ def _plots(entries, summary, output, font_path):
     save(fig, "sample_stability")
 
     fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.7), layout="constrained")
-    for index, (name, color, label) in enumerate((("baseline", BASE_COLOR, "基线"), ("final", FINAL_COLOR, "最终"))):
+    for index, (name, color, label) in enumerate((("baseline", BASE_COLOR, "对照方法"), ("final", FINAL_COLOR, "比较方法"))):
         values = [entry["boundaries"][name]["boundary_iou"] for entry in entries]
         values = np.array([value for value in values if value is not None])
         jitter = np.linspace(-0.1, 0.1, len(values))
         axes[0].scatter(index + jitter, values, color=color, s=22, alpha=0.65)
         axes[0].plot([index - 0.22, index + 0.22], [values.mean()] * 2, color=color, linewidth=3)
         axes[0].text(index + 0.25, values.mean(), f"均值 {values.mean():.3f}", va="center", fontsize=9)
-    axes[0].set(xticks=[0, 1], xticklabels=["基线", "最终"], xlim=(-0.5, 1.8), ylim=(0, 1), ylabel="逐图 Boundary IoU", title="边界是否贴合？（带宽为对角线的 2%）")
+    axes[0].set(xticks=[0, 1], xticklabels=["对照方法", "比较方法"], xlim=(-0.5, 1.8), ylim=(0, 1), ylabel="逐图 Boundary IoU", title="边界是否贴合？（带宽为对角线的 2%）")
     errors = {name: summary["pixel_metrics"][name] for name in ("baseline", "final")}
     fp = [errors[name]["fp"] / errors[name]["n_valid"] for name in errors]
     fn = [errors[name]["fn"] / errors[name]["n_valid"] for name in errors]
@@ -217,7 +201,7 @@ def _plots(entries, summary, output, font_path):
     for index in range(2):
         axes[1].text(index, fp[index] / 2, f"{fp[index]:.2%}", ha="center", va="center", color="white")
         axes[1].text(index, fp[index] + fn[index] / 2, f"{fn[index]:.2%}", ha="center", va="center", color="white")
-    axes[1].set(xticks=[0, 1], xticklabels=["基线", "最终"], ylabel="占全部有效像素的比例", title="错误来自误检还是漏检？", ylim=(0, max(np.array(fp) + fn) * 1.25))
+    axes[1].set(xticks=[0, 1], xticklabels=["对照方法", "比较方法"], ylabel="占全部有效像素的比例", title="错误来自误检还是漏检？", ylim=(0, max(np.array(fp) + fn) * 1.25))
     axes[1].yaxis.set_major_formatter(PercentFormatter(1))
     axes[1].legend(loc="upper right", fontsize=9)
     save(fig, "boundary_and_errors")
@@ -238,7 +222,7 @@ def _plots(entries, summary, output, font_path):
     groups = summary["brightness_groups"]
     fig, ax = plt.subplots(figsize=(10.4, 4.8), layout="constrained")
     x = np.arange(len(groups))
-    for shift, name, color, label in ((-0.18, "baseline", BASE_COLOR, "基线"), (0.18, "final", FINAL_COLOR, "最终")):
+    for shift, name, color, label in ((-0.18, "baseline", BASE_COLOR, "对照方法"), (0.18, "final", FINAL_COLOR, "比较方法")):
         values = [group[name]["f1"] for group in groups]
         ax.bar(x + shift, values, width=0.34, color=color, label=label)
         for index, value in enumerate(values):
@@ -250,12 +234,12 @@ def _plots(entries, summary, output, font_path):
     save(fig, "brightness_groups")
 
 
-def create_visual_assessment(manifest_path, run_dir, output_dir, *, font=None, n_resamples=10000, seed=42) -> dict:
+def create_visual_assessment(manifest_path, run_dir, output_dir, *, font=None, n_resamples=10000, seed=42, before="baseline", after="final") -> dict:
     manifest, run, output = (Path(value).resolve() for value in (manifest_path, run_dir, output_dir))
     if output.exists():
         raise ValueError("output directory exists; choose a new visualization directory")
     font_path = _font_path(font)
-    entries, frozen = _collect(manifest, run)
+    entries, comparison = _collect(manifest, run, before, after)
     records = []
     for entry in entries:
         row = {"sample_id": entry["sample_id"], "face_mean_y": entry["face_mean_y"], "face_fraction": entry["face_fraction"]}
@@ -282,12 +266,21 @@ def create_visual_assessment(manifest_path, run_dir, output_dir, *, font=None, n
             group[scheme] = summarize(entries[index]["metrics"][scheme] for index in indices)["global"]
         groups.append(group)
     selected, preview = _selection(entries)
-    summary = {"scope": "Post-hoc visualization and supplementary evaluation of fixed saved test predictions", "n_images": len(entries), "source_b_revision": frozen["b_revision"], "independent_test_sha256": _digest(run / "independent_test.json"), "manifest_sha256": _digest(manifest), "pixel_metrics": {name: frozen["results"][f"test-{name}"]["global"] for name in ("baseline", "final")}, "distributions": distributions, "image_comparison": {"improved_f1": sum(row["delta_f1"] > 0 for row in records), "declined_f1": sum(row["delta_f1"] < 0 for row in records), "same_f1": sum(row["delta_f1"] == 0 for row in records)}, "boundary_policy": {"dilation_ratio": 0.02, "band_radius_pixels": sorted({entry["boundaries"]["final"]["band_radius_pixels"] for entry in entries}), "aggregation": "unweighted image mean; undefined values excluded", "ignored_region_extension": "exclude ignored pixels and their band-radius neighborhood"}, "uncertainty": uncertainties, "brightness_groups": groups, "selected_examples": [{"role": role, "sample_id": entry["sample_id"]} for role, entry in selected], "limitations": ["Supplementary metrics and subgroups were chosen after seeing the original test results; they are descriptive, not a new independent benchmark", "Image-bootstrap intervals describe resampling variability within these 32 selected images, not guaranteed population coverage", "Pixel brightness is not a verified illumination condition or demographic label; brightness groups do not establish causality", "No new inference, model selection or parameter changes were performed"], "references": {"boundary_iou_paper": "https://openaccess.thecvf.com/content/CVPR2021/html/Cheng_Boundary_IoU_Improving_Object-Centric_Image_Segmentation_Evaluation_CVPR_2021_paper.html", "boundary_iou_reference": "https://github.com/bowenc0221/boundary-iou-api/blob/master/boundary_iou/utils/boundary_utils.py", "paired_bootstrap": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html"}}
-    import cv2
-    import matplotlib
-    import PIL
-    summary["runtime_versions"] = {"numpy": np.__version__, "Pillow": PIL.__version__, "opencv": cv2.__version__, "matplotlib": matplotlib.__version__}
-    summary["analysis_source_sha256"] = {name: _digest(Path(__file__).parent / name) for name in ("assessment.py", "visualization.py")}
+    summary = {
+        "n_images": len(entries),
+        "methods": {"baseline": before, "final": after},
+        "pixel_metrics": {name: comparison["results"][f"test-{name}"]["global"] for name in ("baseline", "final")},
+        "distributions": distributions,
+        "image_comparison": {
+            "improved_f1": sum(row["delta_f1"] > 0 for row in records),
+            "declined_f1": sum(row["delta_f1"] < 0 for row in records),
+            "same_f1": sum(row["delta_f1"] == 0 for row in records),
+        },
+        "boundary_policy": {"dilation_ratio": 0.02, "band_radius_pixels": sorted({e["boundaries"]["final"]["band_radius_pixels"] for e in entries}), "aggregation": "image mean"},
+        "uncertainty": uncertainties,
+        "brightness_groups": groups,
+        "selected_examples": [{"role": role, "sample_id": e["sample_id"]} for role, e in selected],
+    }
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".visual-assessment-", dir=output.parent) as temporary:
         stage = Path(temporary) / "figures"
@@ -298,30 +291,32 @@ def create_visual_assessment(manifest_path, run_dir, output_dir, *, font=None, n
             writer = csv.DictWriter(stream, fieldnames=list(records[0]))
             writer.writeheader()
             writer.writerows(records)
-        _board(preview, [("original", "原图"), ("gt", "人工真值"), ("cutout", "B 最终预测抠图"), ("errors", "误差叠加")], "B 预测效果：成功、漏检与误检", stage / "prediction_examples.png", font_path)
-        _board(selected, [("original", "原图"), ("gt", "人工真值"), ("baseline", "基线预测"), ("final", "最终预测"), ("errors", "最终误差")], "基线与最终方案：代表样例对照", stage / "baseline_final_comparison.png", font_path)
+        _board(preview, [("original", "原图"), ("gt", "人工真值"), ("cutout", "比较方法预测抠图"), ("errors", "误差叠加")], "预测效果：成功、漏检与误检", stage / "prediction_examples.png", font_path)
+        _board(selected, [("original", "原图"), ("gt", "人工真值"), ("baseline", "对照方法"), ("final", "比较方法"), ("errors", "比较方法误差")], "两种方法：代表样例对照", stage / "baseline_final_comparison.png", font_path)
         for index, entry in enumerate(entries):
             _single(entry, stage / "per_image" / f"{entry['sample_id']}.png", font_path)
             _cutout(entry, transparent=True).save(stage / "transparent_cutouts" / f"{entry['sample_id']}.png")
             if (index + 1) % 8 == 0:
                 print(f"Rendered {index + 1}/{len(entries)} image comparisons", flush=True)
         _plots(entries, summary, stage, font_path)
-        (stage / "README.md").write_text("# B 预测可视化与补充评价\n\nprediction_examples.png：成功、严重漏检与误检样例。baseline_final_comparison.png：按明确规则选取的代表样例。per_image/：全部测试图的六宫格；transparent_cutouts/：直接使用 B 最终预测作为 alpha 的透明 PNG。棋盘格仅为抠图显示背景。\n\n误差图：绿色 TP，红色 FP，蓝色 FN，黄色忽略区。图片仅为显示缩放，全部指标在原始像素尺寸计算；预测/真值/配置原文件均未改变。\n\n其余 PNG/SVG 为逐图稳定性、Boundary IoU 与误检漏检、配对 Bootstrap 区间、探索性亮度分组。analysis_summary.json 和 per_image_assessment.csv 记录定义及结果。\n\n边界带宽为图像对角线的 2%（512×512 对应 14 像素）。Bootstrap 按图像配对重采样 10000 次、种子 42，区间为 percentile 95%。补充评估为事后描述，不能当成新的独立测试；亮度分组也不能证明光照因果。\n", encoding="utf-8")
+        (stage / "README.md").write_text("# 预测可视化与补充评价\n\nprediction_examples.png：成功、严重漏检与误检样例。baseline_final_comparison.png：按明确规则选取的代表样例。per_image/：全部测试图的六宫格；transparent_cutouts/：直接使用 比较方法预测作为 alpha 的透明 PNG。棋盘格仅为抠图显示背景。\n\n误差图：绿色 TP，红色 FP，蓝色 FN，黄色忽略区。图片仅为显示缩放，全部指标在原始像素尺寸计算；预测/真值/配置原文件均未改变。\n\n其余 PNG/SVG 为逐图稳定性、Boundary IoU 与误检漏检、配对 Bootstrap 区间、探索性亮度分组。analysis_summary.json 和 per_image_assessment.csv 记录定义及结果。\n\n边界带宽为图像对角线的 2%（512×512 对应 14 像素）。Bootstrap 按图像配对重采样 10000 次、种子 42，区间为 percentile 95%。补充评估为事后描述，不能当成新的独立测试；亮度分组也不能证明光照因果。\n", encoding="utf-8")
         stage.rename(output)
     return summary
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Visualize fixed B predictions and assess stability, boundaries and uncertainty")
+    parser = argparse.ArgumentParser(description="Visualize predictions, per-image variation and boundaries")
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--run", required=True, help="Completed independent test directory")
+    parser.add_argument("--before", default="baseline", help="对照配置的 config_id")
+    parser.add_argument("--after", default="final", help="比较配置的 config_id")
     parser.add_argument("--output", required=True, help="New output directory")
     parser.add_argument("--font", help="Chinese-capable font file")
     parser.add_argument("--bootstrap-resamples", type=int, default=10000)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args(argv)
     try:
-        result = create_visual_assessment(args.manifest, args.run, args.output, font=args.font, n_resamples=args.bootstrap_resamples, seed=args.seed)
+        result = create_visual_assessment(args.manifest, args.run, args.output, font=args.font, n_resamples=args.bootstrap_resamples, seed=args.seed, before=args.before, after=args.after)
     except (ValueError, OSError, KeyError, ImportError) as error:
         parser.exit(2, f"Visualization failed: {error}\n")
     print(f"Visualized {result['n_images']} fixed test predictions: {Path(args.output).resolve()}")

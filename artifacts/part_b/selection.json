@@ -1,0 +1,61 @@
+{
+  "baseline": {
+    "candidate": "candidate_02",
+    "k": 1.5,
+    "postprocess": "none",
+    "tp": 1645235,
+    "fp": 1682619,
+    "tn": 4477867,
+    "fn": 582887,
+    "n_valid": 8388608,
+    "accuracy": 0.7299306392669678,
+    "precision": 0.4943831670499968,
+    "recall": 0.7383953840947668,
+    "f1": 0.592239779293503,
+    "iou": 0.4206964869317605,
+    "image_mean_f1": 0.595316329685887
+  },
+  "final": {
+    "candidate": "candidate_19",
+    "k": 1.25,
+    "postprocess": "largest_fill",
+    "tp": 1842674,
+    "fp": 998367,
+    "tn": 5162119,
+    "fn": 385448,
+    "n_valid": 8388608,
+    "accuracy": 0.8350363969802856,
+    "precision": 0.6485911326165303,
+    "recall": 0.8270076773174898,
+    "f1": 0.7270131183392603,
+    "iou": 0.5711080992372823,
+    "image_mean_f1": 0.7067461494559121
+  },
+  "n_validation_images": 32,
+  "plan": {
+    "plan_id": "part-b-validation-v1",
+    "split": "validation",
+    "metric": "global.f1",
+    "k_values": [
+      1,
+      1.25,
+      1.5,
+      1.75,
+      2,
+      2.25,
+      2.5,
+      2.75,
+      3
+    ],
+    "postprocess_values": [
+      "none",
+      "fill",
+      "largest_fill",
+      "close_largest_fill"
+    ],
+    "closing_kernel": 5,
+    "tie_break": "higher global F1, then simpler postprocess in listed order, then smaller k",
+    "reason": "Baseline color threshold; hole filling for eyes/mouth in the face target; largest component to remove disconnected skin-colored background; 5x5 closing before component selection. No test-based choices."
+  },
+  "test_evaluated": false
+}

@@ -1,4 +1,4 @@
-"""Strict binary pixel evaluation shared by B's validation and C's testing.
+"""Pixel counts and metrics for validation and testing.
 
 Positive means the agreed skin label. Undefined metrics are represented by None.
 Image means exclude undefined values and report a separate denominator per metric.

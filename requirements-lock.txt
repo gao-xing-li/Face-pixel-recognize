@@ -1,0 +1,2 @@
+# Experiment dependencies, no exact version lock.
+-r requirements.txt
