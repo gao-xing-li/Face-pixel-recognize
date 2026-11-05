@@ -1,9 +1,19 @@
-# 数据交接
+# 数据获取
 
-A 维护唯一的 `split_manifest.csv`，格式见 [公共接口](../docs/interfaces.md)。`split_manifest.example.csv` 只有虚构路径，用来展示字段；不要将其当作真实数据运行。
+本提交包保留 split_manifest.csv，原始图像与标签按需获取，不重复放入附件。
 
-- `raw/` 放本地原始图片，`processed/` 放显式转换后的二值真值及有效区域，默认不提交。
-- 所有 CSV 相对路径相对于该 CSV 所在目录。
-- 原图、预测和真值的尺寸及像素位置必须一致。
-- A 后续补充真实来源、获取方法、使用条件、正类映射、样本数量、亚洲人脸筛选依据及划分/去重说明。
-- 评价入口会读取全局清单的原图进行精确文件去重；身份/近重复问题仍需 A/C 核查。
+1. 下载[实验所用的固定数据版本](https://github.com/gao-xing-li/Face-pixel-recognize/archive/1389a77158ab484dbdbbbb4e4e2f4d1c46a9625b.zip)，解压。
+2. 将其中的 data/raw/face_segment 文件夹复制到本项目的 data/raw/face_segment。
+3. 执行 face-pixel-prepare，生成二值脸部真值和有效区域。
+
+最终目录应为以下结构。
+
+```text
+data/
+  split_manifest.csv
+  raw/face_segment/
+    images/00526.png ...
+    labels/00526.png ...
+```
+
+清单使用 162 对样本，训练 98 张、验证 32 张、测试 32 张。若已有课程原始数据，按清单 image_path 和 label_path 放置对应文件即可，保留原文件名与配对。

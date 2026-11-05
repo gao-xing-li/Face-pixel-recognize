@@ -1,48 +1,36 @@
-# Face-pixel-recognize
+# 第三次 Project，基于颜色的人脸分割
 
-数字图像处理实验：基于颜色信息的亚洲人脸分割。
+报告为 李维政 24325143_郑立峰 24325341_李睿 24325142_第三次 project.pdf，本包包含实验源码、参数配置和数据划分清单。
 
-采用 Python、OpenCV、NumPy、Matplotlib，以肤色统计模型进行像素分割。优先使用 YCbCr 颜色空间和肤色均值、标准差阈值，先跑通基础流程，再按验证效果选择辅助处理。
+## 复现步骤
 
-## 当前状态
-
-**main 发布公共骨架与跨模块接口约定。** A/B 的数据、统计、检测和验证实现待接入；尚无正式实验结果。C 已认领独立测试、分析及报告整合，评价实现单独发布在 [C 开发分支](https://github.com/gao-xing-li/Face-pixel-recognize/tree/feat/c-evaluation-bootstrap)，通过合并请求整合。main 暂不包含可运行算法或安装入口。
-
-## 文档入口
-
-| 文档 | 用途 |
-| --- | --- |
-| [分工文档](分工文档.md) | 职责、技术路线、依赖及验收 |
-| [公共接口 v0.1](docs/interfaces.md) | 数据/预测清单、掩膜语义、检测建议接口及共用评价口径 |
-| [分工方案对比与采纳说明](docs/分工方案对比与采纳说明.md) | 两版方案的来源及取舍 |
-| [补充方案原文](docs/参考方案/补充分工方案.md) | 参考原文归档 |
-| [C 模块启动与交接](https://github.com/gao-xing-li/Face-pixel-recognize/blob/feat/c-evaluation-bootstrap/docs/C模块启动与交接.md) | C 当前交付及 A/B 接入清单，位于 C 分支 |
-
-## 公共目录
+先按 [数据获取说明](data/README.md) 放入原图和标签，再在本 README 所在目录执行。
 
 ```text
-src/face_pixel/       # A 建模、B 检测与验证、C 评价；具体代码由负责人提交
-data/                # A 维护获取说明、唯一划分和标签定义
-configs/             # A 的训练统计、B 的固定配置
-tests/               # 按共用接口进行手算、配对和集成核查
-results/             # 本地运行产物，默认不提交
-report/              # 各自章节及图表，C 整合
-docs/interfaces.md   # 跨模块约定
+python -m pip install -e .
+face-pixel-prepare
+face-pixel --output results/reproduce
+face-pixel-visualize --manifest data/processed/face/manifest.csv --run results/reproduce --before original --after final --output results/reproduce-visualization
 ```
 
-目录中的 README 明确用途；建议模块名不代表对应算法已经实现。原始数据、环境及临时结果不入库。大型数据或无法再分发的数据保留获取说明。
+默认比较三种方法，纯颜色阈值、最大连通域与填孔、形态学补全。预测、评价表、图像对照和补充统计会自动生成，附件不重复包含这些结果。完整分析与图表已收录于 PDF。
 
-## 并行开发与首次交接
+## 代码与参数
 
-- A 先给少量原图、真值和标签映射，再提供唯一的训练/验证/测试清单与正式统计。
-- B 实现检测与验证选参，负责完整代码整合和正式运行方式；可以自行准备评价，不等待 C。
-- C 的 `evaluate` / `summarize`、批量评价和手算样例在 C 分支，B 可切换到该分支验证接入，或在合并后直接复用。
-- 第一次联调使用同一幅样例，检查原图、真值、预测和指标能否接通。跨模块变化同步接口说明。
+- src/face_pixel/detection.py 为颜色阈值与区域处理。
+- src/face_pixel/evaluation.py 为混淆计数与五项指标。
+- src/face_pixel/experiment.py 连接预测和评价，validation.py 实现验证选参。
+- src/face_pixel/modeling.py 统计训练颜色，dataset.py 转换真值。
+- src/face_pixel/visualization.py 与 assessment.py 展示效果、边界和逐图波动。
+- configs/skin_params.json 保存训练统计，baseline、original、final 配置分别对应三种方法。
 
-正式实验按“训练统计 → 验证选参 → 固定配置 → 独立测试 → 报告整合”推进。统一正类、颜色通道、像素范围、掩膜尺寸及指标口径；测试集不用于调参。
+按需要重新选择参数和运行阶段诊断。
 
-## 实验范围与提交
+```text
+python -m face_pixel.validation validate --plan configs/validation_plan.json --output results/reselect-original
+python -m face_pixel.validation validate --plan configs/morphology_plan.json --output results/reselect-morphology
+python scripts/analyze_error_stages.py --output results/stages
+python -m unittest discover -s tests -v
+```
 
-本实验直接评价像素级肤色分割。人体皮肤与脸部皮肤的标签范围由 A 明确，不能直接将肤色掩膜称为身份识别结果。“亚洲人脸”的来源与筛选依据据实记录。
-
-补充方案记录的课程提交时间为 11 月 2 日（含）前，提交到指定的 163 邮箱；具体要求按课程通知核对。
+输出使用新目录。原方法独立测试 F1 为 70.69%，补全后的开发后比较 F1 为 70.70%，报告中分别说明证据范围。
