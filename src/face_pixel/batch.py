@@ -1,4 +1,4 @@
-"""Evaluate saved predictions, preserving pairing, input hashes and run settings."""
+"""Evaluate saved predictions, preserving sample pairing and run settings."""
 
 import csv
 import json

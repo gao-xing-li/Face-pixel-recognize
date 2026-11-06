@@ -64,3 +64,6 @@ face-pixel-fit --params results/refit/skin_params.json --output results/refit
 `artifacts/` 保留历史实验记录，里面的版本号与哈希属于当时的原始记录，不参与现在的代码执行。报告结果不因代码整合而覆盖。
 
 更多命令见 [运行说明](docs/结果诊断与报告复现.md)，测试执行 `python -m unittest discover -s tests -v`。每次运行使用新的输出目录，便于保留不同实验。
+
+
+当前流程、三套方法的完整指标和结果范围见[完整运行逻辑](docs/完整运行逻辑与独立测试.md)。2026-11-02 本地检查通过 57 项自动检查；训练统计重算一致，原方案及补全方案共 128 张验证/测试预测与归档逐像素一致，15 组形态学搜索仍选中 41×41。检查环境为 Python 3.13.7、OpenCV 5.0.0、NumPy 2.5.4、Pillow 13.0.0。main 仍为公共骨架，完整成果当前位于本分支。

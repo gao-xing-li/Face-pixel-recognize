@@ -10,4 +10,4 @@
 - evaluation 保存逐图评价及输入哈希，input_provenance.json 汇总来源。路径中的 ${EXPERIMENT_ROOT} 表示本地实验根目录，未上传原始人像与标签文件。
 - frozen_configs 和 remote_snapshot.json 保存冻结条件与经核验的远程文件 Git blob 哈希。
 
-复现入口为 scripts/compare_frozen_methods.py，命令见 docs/结果诊断与报告复现.md。报告中的五张新增图展示空间差异与逐图分布，总体数值统一放在表格。
+当时使用的冻结复现脚本可在提交 `46a70e1` 的 `scripts/compare_frozen_methods.py` 查看，当前已移除。现行新旧方法比较用 `face-pixel --configs configs/original_config.json configs/final_config.json --output results/morphology`，不再重建本归档的哈希结构；命令见 [运行说明](../../../docs/结果诊断与报告复现.md)。报告中的五张新增图展示空间差异与逐图分布，总体数值统一放在表格。

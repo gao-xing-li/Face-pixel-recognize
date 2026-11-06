@@ -1,11 +1,20 @@
-# 数据交接
+# 数据说明与运行准备
 
-A 维护唯一的源数据划分。评价入口接受的派生清单格式见 [公共接口](../docs/interfaces.md)。`split_manifest.example.csv` 只有虚构路径，用来展示字段；不要将其当作真实数据运行。
+当前仓库已包含 162 张原图与 162 张原始标签，位于 `raw/face_segment/images/`、`raw/face_segment/labels/`，无需另取 A 分支。它们已被 Git 跟踪，当前 `.gitignore` 也明确允许这两个目录中的 PNG；派生数据和其他临时文件仍按规则忽略。
 
-目前 A 已在 `feat/part-a` 提供真实清单，使用 `label_path`、`val` 和项目根目录相对路径。请先按 [Part A 接入核查](../docs/PartA接入核查.md) 运行适配命令，再将派生的 `processed/part_a/split_manifest.csv` 交给评价入口。适配后路径相对于派生 CSV，真值/有效区域均为 0/1，原始标签与划分保持不变。
+## 来源与选样说明
 
-- `raw/` 放本地原始图片，`processed/` 放显式转换后的二值真值及有效区域，默认不提交。
-- 所有 CSV 相对路径相对于该 CSV 所在目录。
-- 原图、预测和真值的尺寸及像素位置必须一致。
-- A 已在其分支的数据说明和元数据中记录来源、使用条件、映射、划分及筛选限制；本分支保存接入核查证据，原始文件仍从 A 分支获取。
-- 评价入口会读取全局清单的原图进行精确文件去重；身份/近重复问题仍需 A/C 核查。
+实验者从 Face_segment 原始 `test/real_image/2` 中依据主观外观筛选，目标是外观接近亚洲人脸的样本，不能解释为官方族群属性标签。最初 163 对，图像完全重复的 00583/00584 保留 00583、排除 00584。原图均为 512×512 RGB，标签为单通道 0--18 类别编码。图像与标签人工检查、划分浏览均通过；未核验人物身份互斥，不保证穷尽近重复。
+
+仅使用原数据 test 来源，原 train 可按需补充。实验者反馈 train 中部分图像含敏感元素、筛查成本较高，当前不扩充。来源目录的 test 与本实验重新划分的 test 不同。详细记录见 [metadata.json](part_a/metadata.json) 与 [split_report.json](part_a/split_report.json)。
+
+## 清单与标签
+
+- 源清单 [split_manifest.csv](split_manifest.csv) 使用 `sample_id,image_path,label_path,split,...`，路径相对**项目根目录**，固定 train=98、val=32、test=32，随机种子 42。
+- 运行 `face-pixel-prepare` 生成 `processed/face/manifest.csv`，路径相对**该 CSV 目录**，val 改为 validation，不重新划分图像。
+- 统计取 `{1,2}`；脸部真值正类 `{1,2,4,5,6,7,10,11,12}`；眼镜 `{3}` 不进入评价，其余为负类。派生真值与有效区域为 0/1，原始多类标签不变。
+- 预测清单路径相对预测 CSV；预测 PNG 使用 0/255，计分时声明 `binary255`。
+
+原图、真值与预测必须尺寸和像素位置一致。当前程序检查 ID、图像路径重复、标签范围和尺寸，不再进行文件内容哈希门禁。固定数据历史去重与来源哈希仍保留在原始记录中。`split_manifest.example.csv` 为虚构示例。
+
+`processed/` 为可再生成的本地产物，默认不提交。已有目标目录时 prepare 拒绝覆盖：复用原清单，或用 `--output` 准备到新位置。字段见 [实验接口](../docs/interfaces.md)。

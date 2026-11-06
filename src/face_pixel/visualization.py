@@ -307,7 +307,7 @@ def create_visual_assessment(manifest_path, run_dir, output_dir, *, font=None, n
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Visualize predictions, per-image variation and boundaries")
     parser.add_argument("--manifest", required=True)
-    parser.add_argument("--run", required=True, help="Completed independent test directory")
+    parser.add_argument("--run", required=True, help="Completed experiment output directory")
     parser.add_argument("--before", default="baseline", help="对照配置的 config_id")
     parser.add_argument("--after", default="final", help="比较配置的 config_id")
     parser.add_argument("--output", required=True, help="New output directory")
