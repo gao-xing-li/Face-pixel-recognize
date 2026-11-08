@@ -22,8 +22,8 @@
 \stuid{}
 \inst{}
 \major{}
-\date{2026 年 11 月 2 日}
-\hypersetup{pdftitle={基于颜色的人脸分割},pdfauthor={},pdfsubject={数据准备、肤色统计、颜色分割与独立测试}}
+\date{2026 年 11 月 8 日}
+\hypersetup{pdftitle={基于颜色与双椭圆几何先验的人脸分割},pdfauthor={},pdfsubject={数据准备、肤色统计、颜色分割与双椭圆形态学优化}}
 \graphicspath{{images/}}
 \begin{document}
 \hypersetup{pageanchor=false}
@@ -43,6 +43,8 @@
 \FloatBarrier
 \input{sections/supplementary_morphology}
 \FloatBarrier
+\input{sections/lab4_optimization}
+\FloatBarrier
 \clearpage
 \input{sections/conclusion}
 \FloatBarrier
@@ -51,5 +53,17 @@
 Cheng B, Girshick R, Doll\'{a}r P, et al.
 Boundary IoU: Improving Object-Centric Image Segmentation Evaluation[C].
 Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, 2021: 15334--15342.
+\bibitem{hsu2002face}
+Hsu R L, Abdel-Mottaleb M, Jain A K.
+Face Detection in Color Images[J].
+IEEE Transactions on Pattern Analysis and Machine Intelligence, 2002, 24(5): 696--706.
+\bibitem{wang1999frontal}
+Wang J G, Sung E.
+Frontal-View Face Detection and Facial Feature Extraction Using Color and Morphological Operations[J].
+Pattern Recognition Letters, 1999, 20(10): 1053--1068.
+\bibitem{garcia1999face}
+Garcia C, Tziritas G.
+Face Detection Using Quantized Skin Color Regions Merging and Wavelet Packet Analysis[J].
+IEEE Transactions on Multimedia, 1999, 1(3): 264--277.
 \end{thebibliography}
 \end{document}
