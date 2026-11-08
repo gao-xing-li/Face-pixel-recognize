@@ -1,0 +1,168 @@
+{
+  "images": 32,
+  "pair_statuses": {
+    "standard_pair": 29,
+    "no_pair": 1,
+    "recovered_pair": 2
+  },
+  "selected_candidates": {
+    "center": 28,
+    "image_right": 2,
+    "lab3_fallback": 1,
+    "image_left": 1
+  },
+  "metrics": {
+    "raw": {
+      "n_images": 32,
+      "global": {
+        "tp": 1345567,
+        "fp": 1220918,
+        "tn": 4939568,
+        "fn": 882555,
+        "n_valid": 8388608,
+        "accuracy": 0.7492464780807495,
+        "precision": 0.5242839915292706,
+        "recall": 0.6039018509758443,
+        "f1": 0.5612835421130449,
+        "iou": 0.39012797764015494
+      },
+      "image_mean": {
+        "accuracy": 0.7492464780807495,
+        "precision": 0.5487492514631246,
+        "recall": 0.5913493035111638,
+        "f1": 0.5491949734687669,
+        "iou": 0.4157774019579513
+      },
+      "image_mean_n_defined": {
+        "accuracy": 32,
+        "precision": 32,
+        "recall": 32,
+        "f1": 32,
+        "iou": 32
+      }
+    },
+    "lab3": {
+      "n_images": 32,
+      "global": {
+        "tp": 1842674,
+        "fp": 998367,
+        "tn": 5162119,
+        "fn": 385448,
+        "n_valid": 8388608,
+        "accuracy": 0.8350363969802856,
+        "precision": 0.6485911326165303,
+        "recall": 0.8270076773174898,
+        "f1": 0.7270131183392603,
+        "iou": 0.5711080992372823
+      },
+      "image_mean": {
+        "accuracy": 0.8350363969802856,
+        "precision": 0.67005675370805,
+        "recall": 0.8105627724806526,
+        "f1": 0.7067461494559121,
+        "iou": 0.5970627077348961
+      },
+      "image_mean_n_defined": {
+        "accuracy": 32,
+        "precision": 32,
+        "recall": 32,
+        "f1": 32,
+        "iou": 32
+      }
+    },
+    "center": {
+      "n_images": 32,
+      "global": {
+        "tp": 1782702,
+        "fp": 454790,
+        "tn": 5705696,
+        "fn": 445420,
+        "n_valid": 8388608,
+        "accuracy": 0.8926866054534912,
+        "precision": 0.7967411727058689,
+        "recall": 0.8000917364489019,
+        "f1": 0.7984129394076604,
+        "iou": 0.664465327226536
+      },
+      "image_mean": {
+        "accuracy": 0.8926866054534912,
+        "precision": 0.77262029010011,
+        "recall": 0.7877811397077831,
+        "f1": 0.7574967836047553,
+        "iou": 0.6615084809387044
+      },
+      "image_mean_n_defined": {
+        "accuracy": 32,
+        "precision": 32,
+        "recall": 32,
+        "f1": 32,
+        "iou": 32
+      }
+    },
+    "final": {
+      "n_images": 32,
+      "global": {
+        "tp": 1783943,
+        "fp": 460707,
+        "tn": 5699779,
+        "fn": 444179,
+        "n_valid": 8388608,
+        "accuracy": 0.8921291828155518,
+        "precision": 0.7947533022965718,
+        "recall": 0.8006487077458057,
+        "f1": 0.797690112529769,
+        "iou": 0.6634646532003337
+      },
+      "image_mean": {
+        "accuracy": 0.8921291828155518,
+        "precision": 0.7709320246724065,
+        "recall": 0.7883419199034828,
+        "f1": 0.7569378754715916,
+        "iou": 0.6606948204772579
+      },
+      "image_mean_n_defined": {
+        "accuracy": 32,
+        "precision": 32,
+        "recall": 32,
+        "f1": 32,
+        "iou": 32
+      }
+    },
+    "oracle": {
+      "n_images": 32,
+      "global": {
+        "tp": 1798724,
+        "fp": 422459,
+        "tn": 5738027,
+        "fn": 429398,
+        "n_valid": 8388608,
+        "accuracy": 0.8984507322311401,
+        "precision": 0.8098045050767991,
+        "recall": 0.8072825455697669,
+        "f1": 0.8085415587378253,
+        "iou": 0.6786149904492638
+      },
+      "image_mean": {
+        "accuracy": 0.8984507322311401,
+        "precision": 0.7832852672982606,
+        "recall": 0.7939367623343716,
+        "f1": 0.7668093975750755,
+        "iou": 0.6744508498965593
+      },
+      "image_mean_n_defined": {
+        "accuracy": 32,
+        "precision": 32,
+        "recall": 32,
+        "f1": 32,
+        "iou": 32
+      }
+    }
+  },
+  "image_comparison": {
+    "improved_over_lab3": 28,
+    "declined_from_lab3": 3,
+    "equal_to_lab3": 1,
+    "mean_image_f1_delta": 0.050191726015679505
+  },
+  "oracle_note": "Per-image best of center/left/right, selected only after labels; diagnostic upper bound, not a valid predictor."
+}
