@@ -1,0 +1,62 @@
+{
+  "experiment": "lab4/ellipse_check",
+  "source_head": "a06fe999f125219e44a3b73e60dd407e907a5294",
+  "candidate_settings": {
+    "k": 1.25,
+    "min_component_area": 1,
+    "max_components": 3,
+    "combine_candidates": false,
+    "weak_kernel": 5,
+    "max_box_gap": 32,
+    "max_chroma_distance": 12,
+    "neighbors_per_component": 2,
+    "max_points_per_contour": 256,
+    "inner_scale": 0.6,
+    "preprocess": "close"
+  },
+  "threshold_config": {
+    "config_id": "original",
+    "threshold": {
+      "rule": "cbcr_box",
+      "channels": [
+        "Cb",
+        "Cr"
+      ],
+      "k": 1.25
+    },
+    "preprocess": "none",
+    "evaluation_size": "original; no resizing",
+    "postprocess": {
+      "method": "none",
+      "kernel": 5
+    }
+  },
+  "skin_params": {
+    "fit_split": "train",
+    "training_image_count": 98,
+    "skin_pixel_count": 6387552,
+    "skin_label_ids": [
+      1,
+      2
+    ],
+    "color_space": "OpenCV YCrCb",
+    "input_color_order": "BGR",
+    "conversion_channel_order": [
+      "Y",
+      "Cr",
+      "Cb"
+    ],
+    "variance_ddof": 0,
+    "mean_cr": 151.14949561271672,
+    "variance_cr": 87.88095188813571,
+    "std_cr": 9.374484086505012,
+    "mean_cb": 109.11018055117204,
+    "variance_cb": 89.93800609231424,
+    "std_cb": 9.483565051831206
+  },
+  "opencv": "5.0.0",
+  "splits": [
+    "validation"
+  ],
+  "reference": "largest retained single component; no ground-truth-based ranking"
+}

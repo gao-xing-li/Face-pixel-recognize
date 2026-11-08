@@ -1,0 +1,88 @@
+{
+  "source_head": "0b402c15b5e7ae1ea7baa3d5e942a016f69c0582",
+  "tracked_worktree_changes": [
+    " M README.md",
+    " M artifacts/part_c/supplementary_morphology/README.md",
+    " M configs/README.md",
+    " M data/README.md",
+    " M docs/C模块启动与交接.md",
+    " M docs/PartA交接说明.md",
+    " M docs/PartA接入核查.md",
+    " M docs/PartA统计结果初步分析.md",
+    " M docs/PartA设计与决策记录.md",
+    " M docs/PartB交接说明.md",
+    " M docs/启动验证记录.md",
+    " M docs/完整运行逻辑与独立测试.md",
+    " M docs/形态学改进与交接.md",
+    " M docs/结果诊断与报告复现.md",
+    " M docs/预测可视化与补充评估.md",
+    " M report/README.md",
+    " M results/skin_statistics/README.md",
+    " M src/face_pixel/batch.py",
+    " M src/face_pixel/visualization.py",
+    " M 分工文档.md"
+  ],
+  "configs": {
+    "original": {
+      "config_id": "original",
+      "threshold": {
+        "rule": "cbcr_box",
+        "channels": [
+          "Cb",
+          "Cr"
+        ],
+        "k": 1.25
+      },
+      "preprocess": "none",
+      "evaluation_size": "original; no resizing",
+      "postprocess": {
+        "method": "largest_fill",
+        "kernel": 5
+      }
+    },
+    "final": {
+      "config_id": "final",
+      "threshold": {
+        "rule": "cbcr_box",
+        "channels": [
+          "Cb",
+          "Cr"
+        ],
+        "k": 1.25
+      },
+      "preprocess": "none",
+      "evaluation_size": "original; no resizing",
+      "postprocess": {
+        "method": "largest_dilate_fill_erode",
+        "kernel": 41
+      }
+    }
+  },
+  "skin_params": {
+    "fit_split": "train",
+    "training_image_count": 98,
+    "skin_pixel_count": 6387552,
+    "skin_label_ids": [
+      1,
+      2
+    ],
+    "color_space": "OpenCV YCrCb",
+    "input_color_order": "BGR",
+    "conversion_channel_order": [
+      "Y",
+      "Cr",
+      "Cb"
+    ],
+    "variance_ddof": 0,
+    "mean_cr": 151.14949561271672,
+    "variance_cr": 87.88095188813571,
+    "std_cr": 9.374484086505012,
+    "mean_cb": 109.11018055117204,
+    "variance_cb": 89.93800609231424,
+    "std_cb": 9.483565051831206
+  },
+  "n_images": 162,
+  "archived_prediction_matches": 128,
+  "archived_global_metrics_match": true,
+  "note": "Fixed existing configurations; no parameter search. Train is descriptive, test is post-development comparison."
+}

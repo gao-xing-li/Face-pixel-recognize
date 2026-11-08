@@ -1,0 +1,8 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Part A 数据划分检查</title><style>
+body{font-family:'Microsoft YaHei',sans-serif;margin:24px;background:#f1f4f8;color:#182431}
+main{max-width:1584px;margin:auto}a{color:#1859a8}nav{display:flex;gap:24px;margin:18px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+.card{display:block;background:white;padding:10px;border-radius:8px;text-decoration:none}
+.card img{width:100%;display:block;margin-bottom:8px}.panel{width:100%;height:auto;background:white}
+p{line-height:1.7}.hint{background:white;padding:14px;border-radius:8px}
+</style><main><h1>Part A · 数据划分人工检查已通过</h1><nav><a href="index.html">划分说明</a><a href="train.html">训练集 98 张</a><a href="val.html">验证集 32 张</a><a href="test.html">测试集 32 张</a></nav><p>采用约 6∶2∶2：训练 98 张、验证 32 张、测试 32 张。样本 ID 排序后使用独立随机生成器 random.Random(42) 打乱，一次划分；尚未运行分割算法或根据得分选种子。</p><p>原图与标签仍保存在原目录，以 manifest.csv 的 split 字段为准。请查看三个集合是否有明显分布失衡，并记录需进一步核查的相关照片文件名；当前尚未完成人物身份核验。</p><p>低分辨率差值哈希（dHash 64 位，汉明距离 ≤ 8）只用于筛查相似候选，不能证明人物相同或穷尽近重复。本次产生 35 对候选，浏览后未发现明显同照片裁剪或缩放项，未据此建立分组。<a href="near_duplicate_candidates.png" target="_blank">查看候选对照图</a>。</p><p><a href="../../data/split_manifest.csv">统一数据清单</a> · <a href="../../data/part_a/split_report.json">划分记录</a> · <a href="../data_review/index.html">全部标注检查图</a></p></main></html>

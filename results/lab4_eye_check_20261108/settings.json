@@ -1,0 +1,86 @@
+{
+  "config": {
+    "k": 1.25,
+    "max_components": 3,
+    "min_roi_width_fraction": 0.2,
+    "roi_padding_fraction": 0.12,
+    "search_y_fraction": [
+      0.12,
+      0.65
+    ],
+    "blackhat_kernel_fraction": [
+      0.13,
+      0.07
+    ],
+    "minimum_response": 12,
+    "eye_width_fraction": [
+      0.025,
+      0.25
+    ],
+    "eye_height_fraction": [
+      0.012,
+      0.16
+    ],
+    "eye_area_fraction": [
+      0.00035,
+      0.025
+    ],
+    "eye_aspect_ratio": [
+      0.65,
+      7.0
+    ],
+    "pair_distance_fraction": [
+      0.18,
+      0.65
+    ],
+    "max_pair_angle_degrees": 25,
+    "min_pair_area_ratio": 0.3,
+    "display_pairs": 5
+  },
+  "detector": {
+    "config_id": "original",
+    "threshold": {
+      "rule": "cbcr_box",
+      "channels": [
+        "Cb",
+        "Cr"
+      ],
+      "k": 1.25
+    },
+    "preprocess": "none",
+    "evaluation_size": "original; no resizing",
+    "postprocess": {
+      "method": "none",
+      "kernel": 5
+    }
+  },
+  "skin_params": {
+    "fit_split": "train",
+    "training_image_count": 98,
+    "skin_pixel_count": 6387552,
+    "skin_label_ids": [
+      1,
+      2
+    ],
+    "color_space": "OpenCV YCrCb",
+    "input_color_order": "BGR",
+    "conversion_channel_order": [
+      "Y",
+      "Cr",
+      "Cb"
+    ],
+    "variance_ddof": 0,
+    "mean_cr": 151.14949561271672,
+    "variance_cr": 87.88095188813571,
+    "std_cr": 9.374484086505012,
+    "mean_cb": 109.11018055117204,
+    "variance_cb": 89.93800609231424,
+    "std_cb": 9.483565051831206
+  },
+  "opencv": "5.0.0",
+  "split": "validation",
+  "label_map": {
+    "4": "l_eye",
+    "5": "r_eye"
+  }
+}

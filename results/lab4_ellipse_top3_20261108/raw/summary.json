@@ -1,0 +1,39 @@
+{
+  "validation": {
+    "images": 32,
+    "candidates": 96,
+    "status_counts": {
+      "ok": 96
+    },
+    "no_candidate_images": 0,
+    "largest_single_reference": {
+      "n_images": 32,
+      "global": {
+        "tp": 2115226,
+        "fp": 1402127,
+        "tn": 4758359,
+        "fn": 112896,
+        "n_valid": 8388608,
+        "accuracy": 0.8193951845169067,
+        "precision": 0.6013686997011674,
+        "recall": 0.9493313202777944,
+        "f1": 0.7363102267436548,
+        "iou": 0.5826669189909562
+      },
+      "image_mean": {
+        "accuracy": 0.8193951845169067,
+        "precision": 0.659333032629406,
+        "recall": 0.9415324769823682,
+        "f1": 0.7559649298139426,
+        "iou": 0.6273158488403032
+      },
+      "image_mean_n_defined": {
+        "accuracy": 32,
+        "precision": 32,
+        "recall": 32,
+        "f1": 32,
+        "iou": 32
+      }
+    }
+  }
+}

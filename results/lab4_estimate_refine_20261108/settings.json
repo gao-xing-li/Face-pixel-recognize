@@ -1,0 +1,60 @@
+{
+  "experiment": "lab4/estimate_refine",
+  "config": {
+    "k": 1.25,
+    "min_component_area": 128,
+    "max_box_gap": 32,
+    "max_chroma_distance": 12,
+    "neighbors_per_component": 2,
+    "max_points_per_contour": 256,
+    "inner_scale": 0.6,
+    "weak_kernel": 5,
+    "strong_kernel": 9,
+    "refine_inner_scale": 0.8,
+    "refine_outer_scale": 1.15
+  },
+  "skin_params": {
+    "fit_split": "train",
+    "training_image_count": 98,
+    "skin_pixel_count": 6387552,
+    "skin_label_ids": [
+      1,
+      2
+    ],
+    "color_space": "OpenCV YCrCb",
+    "input_color_order": "BGR",
+    "conversion_channel_order": [
+      "Y",
+      "Cr",
+      "Cb"
+    ],
+    "variance_ddof": 0,
+    "mean_cr": 151.14949561271672,
+    "variance_cr": 87.88095188813571,
+    "std_cr": 9.374484086505012,
+    "mean_cb": 109.11018055117204,
+    "variance_cb": 89.93800609231424,
+    "std_cb": 9.483565051831206
+  },
+  "threshold": {
+    "config_id": "original",
+    "threshold": {
+      "rule": "cbcr_box",
+      "channels": [
+        "Cb",
+        "Cr"
+      ],
+      "k": 1.25
+    },
+    "preprocess": "none",
+    "evaluation_size": "original; no resizing",
+    "postprocess": {
+      "method": "none",
+      "kernel": 5
+    }
+  },
+  "splits": [
+    "validation"
+  ],
+  "reference": "first/largest retained single candidate per variant; paired valid image subset"
+}

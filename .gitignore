@@ -20,7 +20,7 @@ data/raw/face_segment/images/*
 data/raw/face_segment/labels/*
 !data/raw/face_segment/images/*.png
 !data/raw/face_segment/labels/*.png
-results/*
-!results/README.md
-!results/skin_statistics/
-!results/skin_statistics/**
+# results/*
+# !results/README.md
+# !results/skin_statistics/
+# !results/skin_statistics/**

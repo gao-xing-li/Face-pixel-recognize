@@ -1,0 +1,19 @@
+{
+  "images": 32,
+  "two_eye_label_images": 32,
+  "missing_eye_label_images": 0,
+  "images_with_pair": 30,
+  "localization": {
+    "0.15": {
+      "selected_pair_hits": 13,
+      "top5_contains_hit": 17,
+      "both_eye_candidates_available": 18
+    },
+    "0.25": {
+      "selected_pair_hits": 13,
+      "top5_contains_hit": 17,
+      "both_eye_candidates_available": 20
+    }
+  },
+  "median_error_when_pair_exists": 0.2729364294754699
+}
