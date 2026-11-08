@@ -1,0 +1,103 @@
+{
+  "images": 32,
+  "images_with_detected_eye_pair": 29,
+  "images_without_detected_eye_pair": 3,
+  "coverage_rate": 0.90625,
+  "detected_eye_ellipse_on_detected_images": {
+    "n_images": 29,
+    "global": {
+      "tp": 1814028,
+      "fp": 575890,
+      "tn": 4984991,
+      "fn": 227267,
+      "n_valid": 7602176,
+      "accuracy": 0.8943516961459456,
+      "precision": 0.7590335735368327,
+      "recall": 0.8886652835577415,
+      "f1": 0.8187500803955937,
+      "iou": 0.6931218083551602
+    },
+    "image_mean": {
+      "accuracy": 0.8943516961459456,
+      "precision": 0.7649726402683481,
+      "recall": 0.8995001063234851,
+      "f1": 0.8138065246430473,
+      "iou": 0.6935441826575774
+    },
+    "image_mean_n_defined": {
+      "accuracy": 29,
+      "precision": 29,
+      "recall": 29,
+      "f1": 29,
+      "iou": 29
+    }
+  },
+  "prior_only_on_same_detected_images": {
+    "n_images": 29,
+    "global": {
+      "tp": 1777490,
+      "fp": 403020,
+      "tn": 5157861,
+      "fn": 263805,
+      "n_valid": 7602176,
+      "accuracy": 0.9122849826155037,
+      "precision": 0.8151716800198119,
+      "recall": 0.870765861867099,
+      "f1": 0.8420521554169366,
+      "iou": 0.7271935082016843
+    },
+    "image_mean": {
+      "accuracy": 0.9122849826155037,
+      "precision": 0.8151716800198119,
+      "recall": 0.8848852924235531,
+      "f1": 0.8397515781021274,
+      "iou": 0.7299636147329914
+    },
+    "image_mean_n_defined": {
+      "accuracy": 29,
+      "precision": 29,
+      "recall": 29,
+      "f1": 29,
+      "iou": 29
+    }
+  },
+  "prior_only_on_all_images": {
+    "n_images": 32,
+    "global": {
+      "tp": 1939403,
+      "fp": 466677,
+      "tn": 5693809,
+      "fn": 288719,
+      "n_valid": 8388608,
+      "accuracy": 0.909949779510498,
+      "precision": 0.8060426087245645,
+      "recall": 0.8704204706923588,
+      "f1": 0.8369954525072494,
+      "iou": 0.7196837315139274
+    },
+    "image_mean": {
+      "accuracy": 0.909949779510498,
+      "precision": 0.8060426087245645,
+      "recall": 0.8837277214826582,
+      "f1": 0.8346441996911632,
+      "iou": 0.7225498186311837
+    },
+    "image_mean_n_defined": {
+      "accuracy": 32,
+      "precision": 32,
+      "recall": 32,
+      "f1": 32,
+      "iou": 32
+    }
+  },
+  "eye_localization": {
+    "median_normalized_error_when_detected": 0.046596970046261385,
+    "hits_at_0.15": 26,
+    "hits_at_0.25": 28
+  },
+  "failed_ids": [
+    "face_segment_test_g2_00592",
+    "face_segment_test_g2_00655",
+    "face_segment_test_g2_00690"
+  ]
+}
