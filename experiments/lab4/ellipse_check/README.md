@@ -9,7 +9,7 @@
 在仓库根目录执行：
 
 ```powershell
-python experiments/lab4/ellipse_check/build_gallery.py --output results/lab4_ellipse_top3_20261108
+python experiments/lab4/ellipse_check/build_gallery.py --output work/lab4_ellipse_top3
 ```
 
 默认只运行 32 张验证图，并分别生成原始、5×5 闭运算和 5×5 开运算三个页面，入口为输出目录的 `index.html`。每种输入独立按面积取前三块，各自拟合一个椭圆，没有双块、三块组合。原始阈值保留供对照。

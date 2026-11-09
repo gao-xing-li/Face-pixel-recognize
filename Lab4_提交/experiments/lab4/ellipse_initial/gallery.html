@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab4 · 椭圆候选检查</title>
+<style>
+:root{--ink:#173f3b;--muted:#5f7370;--line:#d9e6df;--green:#167b68}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:#f2f6f3;color:var(--ink);font:15px/1.6 "Microsoft YaHei",system-ui,sans-serif}
+header{padding:24px max(20px,calc((100vw - 1490px)/2));background:#173f3b;color:white}
+header small{color:#a8dbba;letter-spacing:2px}h1{margin:4px 0;font-size:27px}
+header p{margin:0;color:#d7e5df}main{max-width:1530px;padding:18px 20px;margin:auto}
+h2{font-size:19px;margin:0}h3{font-size:14px;margin:5px 0}a{color:var(--green)}
+.panel{padding:14px;background:white;border:1px solid var(--line);border-radius:10px;margin-bottom:14px}
+.controls,.nav,.links{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap}
+label{display:flex;align-items:center;gap:7px}button,input,select{font:inherit;border:1px solid #b7cdc1;background:white;color:var(--ink);border-radius:5px;padding:5px 8px}
+input{width:130px}button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
+:focus-visible{outline:3px solid #df9d42;outline-offset:2px}.nav{justify-content:space-between}
+.muted{font-size:13px;color:var(--muted)}.note{margin:8px 0;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}
+figure{margin:0;min-width:0}figure img,figure svg{width:100%;height:auto;aspect-ratio:1;display:block;border:1px solid var(--line);background:#101613;overflow:hidden}
+figcaption{font-size:13px;color:var(--muted);margin-top:3px}.wide{overflow:auto}
+table{border-collapse:collapse;width:100%;white-space:nowrap;font-size:13px}th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}th{background:#f2f7f4}summary{cursor:pointer;font-weight:600}
+.badge{padding:2px 8px;background:#edf5ee;border-radius:4px;font-size:13px}
+.candidate-control{padding:10px 12px;background:#edf5ee;border-radius:7px;margin-top:12px;display:flex;gap:8px 18px;align-items:center;flex-wrap:wrap}
+.legend{font-size:13px;margin:8px 0}.orange{color:#bf6b18}.cyan{color:#087d90}
+footer{font-size:13px;color:var(--muted);padding-bottom:25px}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:12px}h1{font-size:23px}.controls{gap:8px}select{max-width:240px}}
+@media(max-width:520px){.grid{grid-template-columns:1fr 1fr;gap:6px}.panel{padding:10px}label{font-size:13px}}
+</style>
+</head>
+<body>
+<header><small>LAB4 / ELLIPSE CHECK</small><h1>从肤色碎片估计人脸椭圆</h1><p>逐张检查候选区域、实际拟合点，以及椭圆落在原图上的位置</p></header>
+<main>
+<section class="panel">
+<div class="controls">
+<label>划分 <select id="split"><option value="validation">验证集</option><option value="test">原测试集</option><option value="train">训练集</option><option value="all">全部</option></select></label>
+<label>编号 <input id="search" type="search" placeholder="如 00578"></label>
+<label>图像 <select id="sample" aria-label="选择图像"></select></label><span id="count" class="muted" aria-live="polite"></span>
+</div>
+<p class="note" id="settings"></p>
+<details><summary>方法、颜色及指标怎么读</summary>
+<p>先做固定肤色阈值分割，保留达到面积下限的多个连通块。空间接近、平均 Cr/Cb 相似的块产生双块和三块组合。对每个候选的外轮廓采样，用 fitEllipse 拟合。所有候选都可以切换查看。</p>
+<p><span class="orange">橙色点</span>是实际参与拟合的轮廓点，<span class="cyan">青色线</span>是拟合椭圆，虚线是按轴长缩小后的中心区域。白色是真值脸部，黄色是真值忽略区。</p>
+<p>肤色支持率来自原始阈值掩膜。它衡量椭圆内有多少像素满足肤色条件。真值覆盖和 IoU 用于事后测量粗定位效果。默认展示面积最大的单块候选，并保留其失败结果；切换组合可检查碎片合并的作用。</p>
+</details>
+</section>
+<details class="panel"><summary>各划分概况与最大单块椭圆参照</summary>
+<div class="wide"><table><thead><tr><th>划分</th><th>图像</th><th>全部候选</th><th>拟合失败</th><th>参照有效图数</th><th>参照 Precision</th><th>参照 Recall</th><th>参照 F1</th><th>参照 IoU</th></tr></thead><tbody id="summary"></tbody></table></div>
+<p class="muted">参照为每张图最大的保留单块所拟合的实心椭圆，汇总只包含拟合成功的图像。它用于观察简单起点的表现。训练集供描述，原测试集为开发后检查。</p>
+</details>
+<section class="panel" id="viewer">
+<div class="nav"><h2 id="title"></h2><div><button id="prev">← 上一张</button> <span id="position" class="muted"></span> <button id="next">下一张 →</button></div></div>
+<div class="candidate-control"><label>候选 <select id="candidate" aria-label="选择椭圆候选"></select></label><span id="candidate-count" class="muted"></span><span id="status" class="badge"></span></div>
+<div class="grid">
+<figure><h3>原图</h3><a id="original-link" target="_blank" rel="noopener"><img id="original" alt="原始图像"></a></figure>
+<figure><h3>原始肤色阈值</h3><img id="raw" alt="未选择最大连通块的肤色掩膜"></figure>
+<figure><h3>保留的连通块及编号</h3><img id="components" alt="彩色标注及编号的连通块"></figure>
+<figure><h3>当前候选区域</h3><img id="mask" alt="当前单块或组合的二值掩膜"></figure>
+<figure><h3>拟合点与椭圆</h3><svg id="overlay" role="img" aria-label="原图上实际拟合点与椭圆"></svg></figure>
+<figure><h3>真值与椭圆</h3><svg id="truth-overlay" role="img" aria-label="真实脸部区域与当前拟合椭圆"></svg></figure>
+</div>
+<p id="component-note" class="muted"></p>
+<p id="geometry" class="note"></p>
+<div class="wide"><table><thead><tr><th>候选诊断</th><th>全部肤色支持率</th><th>中心支持率</th><th>外围支持率</th><th>候选被椭圆覆盖</th><th>轴比</th></tr></thead><tbody id="descriptors"></tbody></table></div>
+<div class="wide"><table><thead><tr><th>实心椭圆的事后测量</th><th>Precision</th><th>Recall</th><th>F1</th><th>IoU</th><th>TP</th><th>FP</th><th>FN</th></tr></thead><tbody id="evaluation"></tbody></table></div>
+<p class="muted">肤色支持率高，也可能来自头发或背景。几何与颜色描述量需结合原图判断。两轴均为完整直径，角度相对图像 x 轴，x 向右、y 向下。</p>
+</section>
+<p class="panel" id="empty" hidden>当前没有匹配图像，请修改编号或选择“全部”。</p>
+<footer class="links"><a href="per_candidate.csv" download>逐候选指标 CSV</a><a href="candidates.json">全部候选与拟合点</a><a href="summary.json">汇总数据</a><a href="settings.json">本次参数</a><a href="README.md">方法和复现说明</a></footer>
+</main>
+<script type="application/json" id="data">__DATA__</script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const data = JSON.parse($('data').textContent);
+const names = {validation:'验证集',test:'原测试集',train:'训练集'};
+const statuses = {ok:'拟合成功',too_few_points:'轮廓点不足',collinear_points:'轮廓点共线',fit_failed:'拟合失败',invalid_geometry:'几何参数异常',outside_image:'椭圆落在图像外'};
+const percent = value => value == null ? '—' : (value * 100).toFixed(2) + '%';
+const number = value => value == null ? '—' : value.toLocaleString('zh-CN');
+const cells = values => values.map(value => '<td>' + value + '</td>').join('');
+let images = [], current = null;
+
+function drawOverlay(id, image, record, candidate, withPoints) {
+  const svg = $(id);
+  svg.setAttribute('viewBox', '0 0 ' + record.width + ' ' + record.height);
+  let content = '<image href="' + image + '" width="' + record.width + '" height="' + record.height + '"/>';
+  if (candidate) {
+    if (withPoints) {
+      const components = record.components.filter(c => candidate.components.includes(c.id));
+      for (const component of components) {
+        content += component.points.map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.5" fill="#ffab41"/>').join('');
+      }
+    }
+    if (candidate.geometry) {
+      const g = candidate.geometry;
+      const shape = '<ellipse cx="' + g.center[0] + '" cy="' + g.center[1] + '" rx="' + g.axes[0]/2 + '" ry="' + g.axes[1]/2 + '" transform="rotate(' + g.angle_degrees + ' ' + g.center.join(' ') + ')" fill="none" stroke="#35e5e7" stroke-width="2.5"/>';
+      content += shape;
+      const scale = data.config.inner_scale;
+      content += '<ellipse cx="' + g.center[0] + '" cy="' + g.center[1] + '" rx="' + g.axes[0]*scale/2 + '" ry="' + g.axes[1]*scale/2 + '" transform="rotate(' + g.angle_degrees + ' ' + g.center.join(' ') + ')" fill="none" stroke="#35e5e7" stroke-width="1.5" stroke-dasharray="5 4"/>';
+    }
+  }
+  svg.innerHTML = content;
+}
+
+function showCandidate() {
+  const record = current;
+  const candidate = record.candidates.find(c => c.id === $('candidate').value);
+  const base = 'assets/' + record.id + '/';
+  $('mask').hidden = !candidate;
+  if (candidate) $('mask').src = base + candidate.id + '.png';
+  drawOverlay('overlay', base + 'original.jpg', record, candidate, true);
+  drawOverlay('truth-overlay', base + 'truth.png', record, candidate, false);
+  $('status').textContent = candidate ? statuses[candidate.status] : '没有达到面积下限的候选';
+  $('geometry').textContent = '';
+  $('descriptors').innerHTML = '';
+  $('evaluation').innerHTML = '';
+  if (!candidate) return;
+  if (candidate.geometry) {
+    const g = candidate.geometry;
+    const flags = [];
+    if (candidate.center_outside_image) flags.push('中心在图外');
+    if (candidate.touches_image_edge) flags.push('椭圆触及图像边缘');
+    $('geometry').textContent = '中心 (' + g.center.map(x => x.toFixed(1)).join(', ') + ') · 长短轴 ' + g.axes.map(x => x.toFixed(1)).join(' / ') + ' px · 角度 ' + g.angle_degrees.toFixed(1) + '° · 拟合点 ' + candidate.point_count + (flags.length ? ' · ' + flags.join('，') : '');
+  }
+  $('descriptors').innerHTML = '<tr><td>' + candidate.id + ' · 块 ' + candidate.components.join('+') + '</td>' + cells([percent(candidate.raw_support),percent(candidate.inner_support),percent(candidate.outer_support),percent(candidate.candidate_coverage),candidate.axis_ratio == null ? '—' : candidate.axis_ratio.toFixed(2)]) + '</tr>';
+  const m = candidate.ellipse_metrics;
+  if (m) $('evaluation').innerHTML = '<tr><td>粗定位区域</td>' + cells([percent(m.precision),percent(m.recall),percent(m.f1),percent(m.iou),number(m.tp),number(m.fp),number(m.fn)]) + '</tr>';
+}
+
+function showImage(index) {
+  const record = images[index];
+  if (!record) return;
+  current = record;
+  $('sample').selectedIndex = index;
+  $('title').textContent = names[record.split] + ' · ' + record.id.split('_').at(-1);
+  $('position').textContent = (index + 1) + ' / ' + images.length;
+  $('prev').disabled = index === 0;
+  $('next').disabled = index === images.length - 1;
+  const base = 'assets/' + record.id + '/';
+  for (const name of ['original','raw','components']) $('' + name).src = base + name + (name === 'raw' ? '.png' : '.jpg');
+  $('original-link').href = base + 'original.jpg';
+  const retained = record.components.filter(c => c.retained).length;
+  $('component-note').textContent = '阈值结果共有 ' + record.components.length + ' 个前景块，保留 ' + retained + ' 个参与候选，面积低于下限的 ' + (record.components.length-retained) + ' 个块仍可在原始肤色图中查看。';
+  $('candidate').replaceChildren(...record.candidates.map(c => new Option(c.id + ' · ' + (c.kind === 'single' ? '单块 ' : '组合 ') + c.components.join('+') + ' · ' + c.area + ' px' + (c.status === 'ok' ? '' : ' · ' + statuses[c.status]),c.id)));
+  $('candidate').disabled = !record.candidates.length;
+  if (record.candidates.length) $('candidate').value = record.candidates[0].id;
+  $('candidate-count').textContent = record.candidates.length + ' 个候选，按单块面积、组合编号排列';
+  showCandidate();
+}
+
+function refresh() {
+  const split = $('split').value;
+  const query = $('search').value.trim();
+  images = data.records.filter(r => (split === 'all' || r.split === split) && r.id.includes(query));
+  images.sort((a,b) => a.id.localeCompare(b.id));
+  $('sample').replaceChildren(...images.map(r => new Option(r.id.split('_').at(-1) + ' · ' + names[r.split],r.id)));
+  $('sample').disabled = !images.length;
+  $('count').textContent = '匹配 ' + images.length + ' 张';
+  $('viewer').hidden = !images.length;
+  $('empty').hidden = !!images.length;
+  if (images.length) showImage(0);
+}
+
+const config = data.config;
+$('settings').textContent = '起步设置 · k=' + config.k + ' · 最小块 ' + config.min_component_area + ' px · 框间距 ≤ ' + config.max_box_gap + ' px · 平均 Cr/Cb 距离 ≤ ' + config.max_chroma_distance + ' · 每块最多组合 ' + config.neighbors_per_component + ' 个近邻';
+$('summary').innerHTML = Object.entries(data.summary).map(([split,s]) => {
+  const reference = s.largest_single_reference;
+  const metrics = reference ? reference.global : {};
+  const failures = Object.entries(s.status_counts).filter(([k]) => k !== 'ok').reduce((sum,[,n]) => sum+n,0);
+  return '<tr><td>' + names[split] + '</td>' + cells([s.images,s.candidates,failures,reference ? reference.n_images : 0,percent(metrics.precision),percent(metrics.recall),percent(metrics.f1),percent(metrics.iou)]) + '</tr>';
+}).join('');
+$('split').value = data.summary.validation ? 'validation' : Object.keys(data.summary)[0];
+$('split').onchange = refresh;
+$('search').oninput = refresh;
+$('sample').onchange = () => showImage($('sample').selectedIndex);
+$('candidate').onchange = showCandidate;
+$('prev').onclick = () => showImage($('sample').selectedIndex-1);
+$('next').onclick = () => showImage($('sample').selectedIndex+1);
+document.addEventListener('keydown', event => {
+  if (['INPUT','SELECT','BUTTON'].includes(event.target.tagName)) return;
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    event.preventDefault();
+    showImage($('sample').selectedIndex + (event.key === 'ArrowLeft' ? -1 : 1));
+  }
+});
+refresh();
+</script>
+</body>
+</html>

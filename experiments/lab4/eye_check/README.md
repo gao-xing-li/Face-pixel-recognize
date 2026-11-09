@@ -1,13 +1,13 @@
 # Lab4 黑帽运算与眼睛配对实验
 
-目标：尝试从原图中找到双眼的位置，检查能否为后续椭圆提供比肤色轮廓更可靠的位置和方向信息。当前只到眼睛定位与可视化，不计算新椭圆，也不运行椭圆后的修整。
+此入口单独运行眼睛定位与可视化，使用面积比 0.30 的严格配对。椭圆诊断和最终修整分别由相邻的 `eye_ellipse` 与 `dual_ellipse_morph` 入口运行。
 
 组员交接先阅读 [当前进展与整体流程](../../../docs/lab4/操作方向与整体流程.md)；三轮眼睛结果与判断见 [眼睛定位实验记录](../../../docs/lab4/眼睛定位实验.md)。当前位置先验下的较好结果不能直接视为人脸椭圆或最终分割已经改善。
 
-在仓库根目录运行：
+在仓库根目录运行，每次指定新的输出目录。
 
 ```powershell
-python experiments/lab4/eye_check/build_gallery.py --output results/lab4_eye_two_point_prior_20261108
+python experiments/lab4/eye_check/build_gallery.py --output work/lab4_eye_two_point
 ```
 
 固定运行清单中的 32 张验证图。离线打开输出目录的 `index.html`，可逐图对照无先验、中点弱先验、双眼分别约束三版首选结果，筛选相对上一版改善或退步的图，以及查看前五个配对。每张图另有六图总览 `assets/<id>/overview.jpg`。分享时复制整个输出目录。此前结果分别保留在 `results/lab4_eye_check_20261108/` 和 `results/lab4_eye_position_prior_20261108/`。

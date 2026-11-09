@@ -41,6 +41,13 @@
 \RequirePackage{makeidx}
 \RequirePackage{xcolor}
 \RequirePackage{fontspec}
+\IfFontExistsTF{FangSong}{%
+    \setCJKfamilyfont{zhfs}{FangSong}%
+    \setCJKmonofont{FangSong}%
+}{%
+    \setCJKfamilyfont{zhfs}[Extension=.otf]{FandolFang-Regular}%
+    \setCJKmonofont[Extension=.otf]{FandolFang-Regular}%
+}
 \RequirePackage{subfigure}
 \PassOptionsToPackage{hyphens}{url}
 \RequirePackage{hyperref}

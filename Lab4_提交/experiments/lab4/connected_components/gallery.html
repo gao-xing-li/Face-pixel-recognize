@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab4 · 最大连通域消融</title>
+<style>
+:root{--ink:#1a3938;--muted:#546965;--line:#dce8e3;--accent:#11695a}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:#f3f7f5;color:var(--ink);font:15px/1.55 "Microsoft YaHei",system-ui,sans-serif}
+header{background:#173e39;color:white;padding:22px max(20px,calc((100vw - 1450px)/2))}
+header p{margin:4px 0 0;color:#c6e3da}header small{color:#ace4d2;letter-spacing:.09em}
+h1{margin:4px 0;font-size:28px}h2{font-size:19px;margin:0 0 8px}
+main{max-width:1490px;margin:auto;padding:16px 20px}a{color:var(--accent)}
+.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.controls,.nav,.legend{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px}
+.controls label{display:flex;gap:6px;align-items:center}
+button,select,input{font:inherit;color:var(--ink);padding:5px 8px;border:1px solid #b9cdc6;border-radius:6px;background:white}
+input{width:130px}button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
+summary{font-weight:600;cursor:pointer}.muted{color:var(--muted);font-size:13px}
+.note{margin:8px 0;font-size:14px}.wide{overflow:auto}
+table{border-collapse:collapse;width:100%;white-space:nowrap;font-size:13px}
+th,td{padding:5px 9px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}th{background:#f3f8f5}
+.nav{justify-content:space-between}.nav h2{margin:0}.board{display:block;width:100%;height:auto}
+.legend{font-size:13px;margin:7px 0}.legend span::before{content:"";display:inline-block;width:10px;height:10px;margin-right:5px;background:var(--color);border-radius:2px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{padding:10px 12px;border-radius:8px;background:#edf6f2}
+.card strong{display:block}.card p{margin:3px 0}footer{font-size:13px;padding:3px 0 20px}
+@media(max-width:700px){main{padding:10px}.cards{grid-template-columns:1fr}.controls{gap:8px}.controls select{max-width:205px}}
+</style>
+</head>
+<body>
+<header><small>LAB4 / 分阶段诊断</small><h1>最大连通域留下了什么？</h1><p>同一肤色阈值 k=1.25 · 先看筛选删掉的区域，再比较两种填孔结果</p></header>
+<main>
+<div class="panel controls">
+<label>划分 <select id="split"><option value="validation">验证集</option><option value="test">原测试集</option><option value="train">训练集</option><option value="all">全部</option></select></label>
+<label>查找 <input id="search" type="search" placeholder="如 00578"></label>
+<label>排序 <select id="sort"><option value="removed_tp">正确脸部误删最多</option><option value="extra_tp">跳过后找回脸部最多</option><option value="extra_fp">跳过后新增误检最多</option><option value="delta_f1">跳过后 F1 提升最多</option><option value="id">图像编号</option></select></label>
+<label>样本 <select id="sample" aria-label="选择样本"></select></label><span class="muted" id="count" aria-live="polite"></span>
+</div>
+<details class="panel">
+<summary>各划分整体结果</summary>
+<p class="note" id="scope"></p>
+<div class="wide"><table><thead><tr><th>划分 / 处理</th><th>Precision</th><th>Recall</th><th>F1</th><th>IoU</th><th>TP</th><th>FP</th></tr></thead><tbody id="totals"></tbody></table></div>
+<p class="muted">全局指标按各划分的有效像素汇总。划分汇总不随搜索和排序改变。训练集仅供描述，原测试集是开发后诊断。</p>
+</details>
+<section class="panel" id="viewer">
+<div class="nav"><h2 id="title"></h2><div><button id="prev">← 上一张</button> <span class="muted" id="position"></span> <button id="next">下一张 →</button></div></div>
+<div class="legend"><span style="--color:#f48731">橙色：脸部</span><span style="--color:#2dbfcb">青色：非脸</span><span style="--color:#a0a0a0">灰色：忽略区</span><span class="muted">颜色只标在两张差异图上；点图可放大。</span></div>
+<a id="zoom" target="_blank" rel="noopener"><img class="board" id="board" alt="原图、阈值分割、最大连通域及删掉的像素；真值、两套填孔结果及差异"></a>
+<div class="cards">
+<div class="card"><strong>① 筛选时删掉</strong><p id="removed"></p></div>
+<div class="card"><strong>② 跳过筛选再填孔，多保留</strong><p id="added"></p></div>
+</div>
+<p class="muted">两张差异图比较的是不同阶段：有些被筛掉的区域，即使不跳过筛选，后续填孔也能补回。</p>
+<div class="wide"><table><thead><tr><th>当前图像 / 处理</th><th>Precision</th><th>Recall</th><th>F1</th><th>IoU</th><th>TP</th><th>FP</th></tr></thead><tbody id="metrics"></tbody></table></div>
+</section>
+<p class="panel" id="empty" hidden>没有匹配的样本。可切换为“全部”再按编号搜索。</p>
+<footer><a href="per_image.csv" download>逐图指标 CSV</a> · <a href="summary.json">汇总 JSON</a> · <a href="settings.json">运行配置</a> · <a href="README.md">实验与复现说明</a></footer>
+</main>
+<script id="payload" type="application/json">__DATA__</script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const {records,summary,splits}=JSON.parse($('payload').textContent);
+const methods={raw:'阈值分割',largest:'只保留最大连通域',largest_fill:'保留最大连通域 → 填孔',fill_all:'跳过最大连通域 → 填孔'};
+const pct=x=>x==null?'—':(x*100).toFixed(2)+'%';
+const count=x=>x.toLocaleString('zh-CN');
+const cells=m=>[pct(m.precision),pct(m.recall),pct(m.f1),pct(m.iou),count(m.tp),count(m.fp)].map(x=>'<td>'+x+'</td>').join('');
+let list=[], current=null;
+function totals(){
+  const s=$('split').value, keys=s==='all'?Object.keys(splits):[s];
+  $('totals').innerHTML=keys.flatMap(k=>Object.keys(methods).map(m=>'<tr><td>'+splits[k]+' · '+methods[m]+'</td>'+cells(summary[k][m].global)+'</tr>')).join('');
+  $('scope').textContent=keys.map(k=>splits[k]+' '+summary[k].raw.n_images+' 张').join(' / ');
+}
+function display(index){
+  const r=list[index];if(!r)return;
+  current=r.id;
+  $('sample').selectedIndex=index;
+  $('title').textContent=splits[r.split]+' · '+r.id.split('_').at(-1);
+  $('position').textContent=(index+1)+' / '+list.length;
+  $('prev').disabled=index===0;$('next').disabled=index===list.length-1;
+  $('board').src='images/'+r.id+'.png';$('zoom').href=$('board').src;
+  $('removed').textContent='脸部 '+count(r.removed_tp)+' 像素 · 非脸 '+count(r.removed_fp)+' 像素';
+  $('added').textContent='正确脸部 '+count(r.extra_tp)+' 像素 · 误检 '+count(r.extra_fp)+' 像素'+(r.delta_f1==null?'':' · ΔF1 '+(r.delta_f1>=0?'+':'')+(100*r.delta_f1).toFixed(2)+' 个百分点');
+  $('metrics').innerHTML=Object.keys(methods).map(k=>'<tr><td>'+methods[k]+'</td>'+cells(r.metrics[k])+'</tr>').join('');
+}
+function refresh(keep=false){
+  const q=$('search').value.trim(), s=$('split').value, order=$('sort').value;
+  list=records.filter(r=>(s==='all'||r.split===s)&&r.id.includes(q));
+  list.sort((a,b)=>(order==='id'?0:(b[order]??-Infinity)-(a[order]??-Infinity))||a.id.localeCompare(b.id));
+  $('sample').replaceChildren(...list.map(r=>new Option(r.id.split('_').at(-1)+' · '+splits[r.split],r.id)));
+  $('sample').disabled=!list.length;$('viewer').hidden=!list.length;$('empty').hidden=!!list.length;
+  $('count').textContent='匹配 '+list.length+' 张';
+  if(list.length)display(keep?Math.max(0,list.findIndex(r=>r.id===current)):0);
+}
+$('split').onchange=()=>{totals();refresh()};
+$('sort').onchange=()=>refresh();
+$('search').oninput=()=>refresh(true);
+$('sample').onchange=()=>display($('sample').selectedIndex);
+$('prev').onclick=()=>display($('sample').selectedIndex-1);
+$('next').onclick=()=>display($('sample').selectedIndex+1);
+document.addEventListener('keydown',event=>{
+  if(!list.length||['INPUT','SELECT','BUTTON'].includes(event.target.tagName))return;
+  if(event.key==='ArrowLeft'||event.key==='ArrowRight'){
+    event.preventDefault();display($('sample').selectedIndex+(event.key==='ArrowLeft'?-1:1));
+  }
+});
+totals();refresh();
+</script>
+</body>
+</html>

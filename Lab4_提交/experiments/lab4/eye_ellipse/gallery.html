@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lab4 · 双眼生成脸部椭圆</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf2f6;color:#183046;font:15px/1.65 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1280px;margin:auto;padding:24px}h1{margin:0;font-size:28px}.muted{color:#587084}.card{margin:15px 0;padding:15px;background:white;border:1px solid #d7e0e8;border-radius:10px}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}select,button{font:inherit;padding:7px 10px;border:1px solid #adc0d0;border-radius:6px;background:white;color:inherit}img{display:block;width:100%;background:#202b34;border-radius:7px}a{color:#087f91}.good{color:#087758}.bad{color:#b34834}.metric{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px}.metric div{background:#f5f8fa;border-radius:7px;padding:9px 12px}.metric b{display:block;font-size:20px}@media(max-width:720px){main{padding:13px}.metric{grid-template-columns:repeat(2,1fr)}}
+</style>
+<main>
+<h1>双眼位置生成脸部椭圆</h1>
+<p class="muted">训练集统计双眼与脸部外形的比例；验证图先检测双眼，再生成椭圆。这里还没有修改肤色二值图，也没有加入形态学操作。</p>
+<div class="card" id="summary"></div>
+<div class="card controls">
+  <label>筛选 <select id="filter"><option value="all">全部图片</option><option value="ok">成功生成椭圆</option><option value="fail">没有检测到双眼</option><option value="low">F1 低于 0.70</option></select></label>
+  <button id="prev">上一张</button><select id="image"></select><button id="next">下一张</button>
+  <a id="open" target="_blank">单独打开总览图</a>
+</div>
+<div class="card"><h2 id="title"></h2><div class="metric" id="metrics"></div><p id="detail" class="muted"></p></div>
+<img id="board" alt="六图总览">
+<div class="card">
+  <b>六幅图怎样看</b>
+  <p>前两幅是图像检测到的眼睛及其生成的椭圆；第三幅是椭圆二值区域；第四幅是完全不看当前图像、直接使用训练集平均眼位的对照；第五、六幅才使用验证标签，分别用于人工参考和误差分析。</p>
+  <p>误差图：绿色为椭圆与真值重合，红色为椭圆多出的区域，蓝色为遗漏的人脸区域，黄色为眼镜等忽略区。找不到双眼时保留失败，不补画预测椭圆。</p>
+  <details><summary>训练得到的几何比例</summary><pre id="prior"></pre></details>
+</div>
+</main>
+<script>
+const DATA=__DATA__, $=id=>document.getElementById(id);let shown=[];
+const fmt=v=>v==null?'—':Number(v).toFixed(3), pct=v=>v==null?'—':(100*v).toFixed(1)+'%';
+const s=DATA.summary,d=s.detected_eye_ellipse_on_detected_images?.global,p=s.prior_only_on_same_detected_images?.global;
+$('summary').innerHTML=`<b>${s.images} 张验证图，${s.images_with_detected_eye_pair} 张检测到双眼并生成椭圆，覆盖率 ${pct(s.coverage_rate)}</b><br>`+
+`成功图片的整体指标：Precision ${fmt(d?.precision)}，Recall ${fmt(d?.recall)}，F1 ${fmt(d?.f1)}，IoU ${fmt(d?.iou)}。<br>`+
+`<span class="muted">相同图片上的固定平均眼位对照：F1 ${fmt(p?.f1)}，IoU ${fmt(p?.iou)}。这项只用于检查数据集对齐程度，不是图像检测结果。</span>`;
+$('prior').textContent=JSON.stringify(DATA.geometry_prior,null,2);
+function refresh(){const filter=$('filter').value,old=$('image').value;shown=DATA.records.filter(r=>filter==='all'||filter==='ok'&&r.status==='ok'||filter==='fail'&&r.status!=='ok'||filter==='low'&&r.detected_metrics&&r.detected_metrics.f1<.70);$('image').innerHTML=shown.map(r=>`<option value="${r.id}">${r.id}${r.status==='ok'?'':' · 无双眼'}</option>`).join('');if(shown.some(r=>r.id===old))$('image').value=old;load()}
+function load(){const r=shown.find(x=>x.id===$('image').value);if(!r){$('title').textContent='没有符合条件的图片';$('metrics').innerHTML='';$('detail').textContent='';$('board').removeAttribute('src');return}const base=`assets/${r.id}/`;$('title').textContent=`${r.id} · ${r.status==='ok'?'已由检测眼睛生成椭圆':'没有检测到合格双眼，未生成椭圆'}`;$('board').src=base+'overview.jpg';$('open').href=base+'overview.jpg';const m=r.detected_metrics;$('metrics').innerHTML=[['Precision',m?.precision],['Recall',m?.recall],['F1',m?.f1],['IoU',m?.iou]].map(([n,v])=>`<div><span>${n}</span><b>${fmt(v)}</b></div>`).join('');$('detail').textContent=`眼睛定位归一化误差：${fmt(r.eye_normalized_error)}；固定平均眼位对照 F1：${fmt(r.prior_only_metrics.f1)}。椭圆中心、轴长和角度均在标签打开前确定。`}
+function move(step){if(!shown.length)return;const i=shown.findIndex(r=>r.id===$('image').value);$('image').value=shown[(i+step+shown.length)%shown.length].id;load()}
+$('filter').onchange=refresh;$('image').onchange=load;$('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);refresh();
+</script>
+</html>

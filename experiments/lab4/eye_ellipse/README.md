@@ -1,6 +1,6 @@
 # Lab4：由双眼位置生成脸部椭圆
 
-本实验只完成“眼睛定位 → 椭圆估计”，暂不修改肤色二值图，也不加入开闭运算、腐蚀、膨胀等形态学处理。
+这是“眼睛定位 → 单椭圆估计”的中间诊断。分区形态学修整在 [最终双椭圆实验](../dual_ellipse_morph/README.md) 中运行。
 
 ## 方法
 
@@ -10,12 +10,12 @@
 4. 验证图沿用 `eye_check` 的图像眼睛检测结果；检测到双眼后套用上述关系生成椭圆。没有检测到双眼时明确记为失败，不使用本图标签或固定均值补画。
 5. 验证标签只在预测完成后计算 Precision、Recall、F1、IoU，并显示人工真值参考。
 
-`prior-only` 对照完全使用训练集平均眼位，只用于判断数据集对齐程度，不属于当前图像检测结果。
+`prior-only` 使用固定训练集平均眼位生成椭圆，用于判断数据集对齐程度。在严格检测成功的同一批 29 张图上，检测眼位和固定眼位生成的实心椭圆全局 F1 分别为 **81.88%** 和 **84.21%**。这组指标衡量单椭圆与真值的重合程度。查看 [图册](../../../results/lab4_eye_ellipse_20261108/index.html) 和 [指标归档](../../../results/lab4_eye_ellipse_20261108/summary.json)。
 
 ## 运行
 
 ```powershell
-python experiments/lab4/eye_ellipse/build_gallery.py --output results/lab4_eye_ellipse_20261108
+python experiments/lab4/eye_ellipse/build_gallery.py --output work/lab4_eye_ellipse
 ```
 
-输出目录中的 `index.html` 可离线查看全部验证图、失败样本和汇总指标。
+从仓库根目录运行，每次选择未存在的输出目录。输出目录中的 `index.html` 可离线查看全部验证图、失败样本和汇总指标。

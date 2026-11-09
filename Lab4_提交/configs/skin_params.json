@@ -1,0 +1,23 @@
+{
+  "fit_split": "train",
+  "training_image_count": 98,
+  "skin_pixel_count": 6387552,
+  "skin_label_ids": [
+    1,
+    2
+  ],
+  "color_space": "OpenCV YCrCb",
+  "input_color_order": "BGR",
+  "conversion_channel_order": [
+    "Y",
+    "Cr",
+    "Cb"
+  ],
+  "variance_ddof": 0,
+  "mean_cr": 151.14949561271672,
+  "variance_cr": 87.88095188813571,
+  "std_cr": 9.374484086505012,
+  "mean_cb": 109.11018055117204,
+  "variance_cb": 89.93800609231424,
+  "std_cb": 9.483565051831206
+}

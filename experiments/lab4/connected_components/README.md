@@ -14,7 +14,7 @@
 在仓库根目录运行：
 
 ```powershell
-python experiments/lab4/connected_components/build_gallery.py --output results/lab4_connected_components
+python experiments/lab4/connected_components/build_gallery.py --output work/lab4_connected_components
 ```
 
 打开生成目录的 `index.html` 即可离线查看。分享时复制整个生成目录。该目录也包含 `per_image.csv`、`summary.json` 和 `settings.json`。重跑时指定新的输出目录。

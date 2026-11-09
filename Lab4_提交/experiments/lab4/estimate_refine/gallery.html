@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab4 · 一轮估计与修整</title>
+<style>
+:root{--ink:#183c36;--muted:#60736b;--line:#d6e4dc;--accent:#127453}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;color:var(--ink);background:#f2f6f2;font:15px/1.6 'Microsoft YaHei',system-ui,sans-serif}
+header{padding:24px max(20px,calc((100vw - 1450px)/2));background:#193f35;color:white}
+header small{color:#abd7bc;letter-spacing:2px}h1{font-size:27px;margin:4px 0}header p{margin:0;color:#d4e6d9}
+main{max-width:1490px;margin:auto;padding:18px 20px}.panel{background:white;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.controls,.nav,.links{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px}
+.nav{justify-content:space-between}label{display:flex;gap:6px;align-items:center}
+button,input,select{font:inherit;color:var(--ink);background:white;border:1px solid #bacfc2;border-radius:5px;padding:5px 8px}
+input{width:125px}select{max-width:330px}button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
+h2{font-size:19px;margin:0}h3{font-size:14px;margin:0 0 4px}a{color:var(--accent)}summary{cursor:pointer;font-weight:600}
+.muted{color:var(--muted);font-size:13px}.note{margin:8px 0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+figure{margin:0;min-width:0}.tile{width:100%;height:auto;aspect-ratio:1;display:block;border:1px solid var(--line);background:#101812;overflow:hidden}
+.stages{display:block;width:100%;height:auto;border:1px solid var(--line);margin:10px 0}.wide{overflow:auto}
+table{border-collapse:collapse;width:100%;white-space:nowrap;font-size:13px}th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}th{background:#eff5ef}.diagnostics{padding:10px 12px;background:#eef5ef;border-radius:6px;margin:10px 0}
+.extra{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:800px;margin-top:10px}
+footer{font-size:13px;color:var(--muted);padding-bottom:20px}:focus-visible{outline:3px solid #e3a54d;outline-offset:2px}
+@media(max-width:750px){main{padding:10px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.panel{padding:10px}.controls{gap:8px}select{max-width:230px}}
+</style>
+</head>
+<body>
+<header><small>LAB4 / ESTIMATE → REFINE</small><h1>弱预操作、椭圆估计与一轮局部修整</h1><p>对比原始、轻量连接和轻量分离，逐候选查看新增与删除的像素</p></header>
+<main>
+<section class="panel">
+<div class="controls">
+<label>划分 <select id="split"></select></label>
+<label>编号 <input id="search" type="search" placeholder="如 00660"></label>
+<label>图像 <select id="sample"></select></label><span id="count" class="muted" aria-live="polite"></span>
+</div>
+<p class="muted" id="settings"></p>
+<p class="muted">先分别从原始阈值生成开、闭运算版本，再用其轮廓产生椭圆。修整始终从原始阈值掩膜出发。每个候选单独修整一次，默认候选为该版本最大的保留单块。</p>
+</section>
+<section class="panel" id="viewer">
+<div class="nav"><h2 id="title"></h2><div><button id="prev">← 上一张</button> <span id="position" class="muted"></span> <button id="next">下一张 →</button></div></div>
+<div class="controls" style="margin-top:10px"><label>候选来源 <select id="variant"></select></label><label>候选 <select id="candidate"></select></label><span id="status" class="muted"></span></div>
+<div class="grid">
+<figure><h3>原图</h3><img id="original" class="tile" alt="原始图像"></figure>
+<figure><h3>原始颜色阈值 M0</h3><img id="raw" class="tile" alt="原始肤色掩膜"></figure>
+<figure><h3>当前弱预操作</h3><img id="weak" class="tile" alt="当前开或闭运算后的掩膜"></figure>
+<figure><h3>拟合点与三个椭圆范围</h3><svg id="overlay" class="tile" role="img" aria-label="拟合椭圆、内部与外部范围"></svg></figure>
+<figure><h3>真值与同一椭圆范围</h3><svg id="truth-overlay" class="tile" role="img" aria-label="椭圆范围与真实脸部"></svg></figure>
+<figure><h3>原图梯度上的边界采样带</h3><img id="edges" class="tile" alt="灰度形态学梯度及青色采样带"></figure>
+</div>
+<p class="muted">实线青色为拟合椭圆，内侧橙虚线为强修补范围，外侧绿虚线为局部输入范围。橙色点为拟合点。边界采样图中青色区域是 5×5 邻域形成的椭圆边界带。</p>
+<details><summary>查看编号连通块与原始梯度图</summary><div class="extra"><img id="components" class="tile" alt="当前版本编号连通块"><img id="gradient" class="tile" alt="完整灰度形态学梯度"></div></details>
+<div class="diagnostics" id="descriptors"></div>
+<div id="candidate-results">
+<h3>候选修整过程</h3>
+<a id="board-link" target="_blank" rel="noopener"><img id="board" class="stages" alt="候选、范围限制、种子、闭运算填孔、内部修补、最终结果及增删像素"></a>
+<p class="muted">新增、删除图中橙色是脸部像素，青色是非脸像素，灰色是忽略像素。它们与原始阈值 M0 比较。点击过程图可放大。</p>
+<p id="changes-raw" class="note"></p><p id="changes-local" class="note"></p>
+<a id="final-link" download>下载本候选最终 0/255 掩膜</a>
+</div>
+<div class="wide"><table><thead><tr><th>当前图像 / 阶段</th><th>Precision</th><th>Recall</th><th>F1</th><th>IoU</th><th>TP</th><th>FP</th><th>FN</th></tr></thead><tbody id="metrics"></tbody></table></div>
+</section>
+<p class="panel" id="empty" hidden>没有匹配图像，请修改搜索编号。</p>
+<details class="panel"><summary>固定最大单块参照的配对汇总</summary>
+<div class="wide"><table><thead><tr><th>划分 / 来源 / 阶段</th><th>配对图数</th><th>Precision</th><th>Recall</th><th>F1</th><th>IoU</th></tr></thead><tbody id="summary"></tbody></table></div>
+<p class="muted">每张图、每个来源仅取面积最大的保留单块。四个阶段均在该来源修整成功的同一批图像上汇总，注明配对图数。单块和组合可逐候选查看，全表未用真值挑选最优候选。</p>
+</details>
+<footer class="links"><a href="records.json">全部候选与阶段测量</a><a href="per_candidate.csv" download>逐候选 CSV</a><a href="summary.json">汇总 JSON</a><a href="settings.json">实际参数</a><a href="README.md">运行与方法说明</a></footer>
+</main>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const data = JSON.parse($('data').textContent);
+const splits = {validation:'验证集',test:'原测试集',train:'训练集'};
+const stages = {raw:'原始阈值',lab3:'Lab3 最大块填孔',local:'仅限制外椭圆',final:'一轮完整修整'};
+const statuses = {ok:'修整完成',no_inner_seed:'内部没有肤色种子',ellipse_unavailable:'椭圆不可用'};
+const pct = value => value == null ? '—' : (100*value).toFixed(2)+'%';
+const num = value => value == null ? '—' : value.toLocaleString('zh-CN');
+const cells = values => values.map(v => '<td>'+v+'</td>').join('');
+let images = [], current = null;
+
+function draw(id, background, candidate, withPoints) {
+  const svg = $(id);
+  svg.setAttribute('viewBox','0 0 '+current.width+' '+current.height);
+  let content = '<image href="'+background+'" width="'+current.width+'" height="'+current.height+'"/>';
+  if (candidate && withPoints) {
+    const components = current.variants[$('variant').value].components;
+    for (const component of components.filter(c => candidate.components.includes(c.id))) {
+      content += component.points.map(p => '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="1.3" fill="#ffa94c"/>').join('');
+    }
+  }
+  if (candidate && candidate.geometry) {
+    const g = candidate.geometry;
+    for (const [scale,color,dash] of [[1,'#35e5e7',''],[data.config.refine_inner_scale,'#ffad42','5 4'],[data.config.refine_outer_scale,'#80e889','5 4']]) {
+      content += '<ellipse cx="'+g.center[0]+'" cy="'+g.center[1]+'" rx="'+g.axes[0]*scale/2+'" ry="'+g.axes[1]*scale/2+'" transform="rotate('+g.angle_degrees+' '+g.center.join(' ')+')" fill="none" stroke="'+color+'" stroke-width="2" stroke-dasharray="'+dash+'"/>';
+    }
+  }
+  svg.innerHTML = content;
+}
+
+function row(label, metrics) {
+  if (!metrics) return '';
+  return '<tr><td>'+label+'</td>'+cells([pct(metrics.precision),pct(metrics.recall),pct(metrics.f1),pct(metrics.iou),num(metrics.tp),num(metrics.fp),num(metrics.fn)])+'</tr>';
+}
+
+function changeText(label, change) {
+  if (!change) return '';
+  return label+' · 新增正确脸部 '+num(change.added_tp)+'，新增误检 '+num(change.added_fp)+'；删除脸部 '+num(change.removed_tp)+'，删除误检 '+num(change.removed_fp)+' 像素';
+}
+
+function showCandidate() {
+  const candidates = current.variants[$('variant').value].candidates;
+  const candidate = candidates.find(c => c.id === $('candidate').value);
+  const base = 'assets/'+current.id+'/';
+  draw('overlay',base+'original.jpg',candidate,true);
+  draw('truth-overlay',base+'truth.png',candidate,false);
+  $('status').textContent = candidate ? statuses[candidate.refine_status] : '没有达到面积下限的候选';
+  $('candidate-results').hidden = !candidate || candidate.refine_status !== 'ok';
+  $('edges').src = candidate && candidate.geometry && candidate.gradient_band_mean != null ? base+candidate.id+'-edges.png' : base+'gradient.png';
+  let metrics = row(stages.raw,current.baseline_metrics.raw)+row(stages.lab3,current.baseline_metrics.lab3);
+  $('descriptors').textContent = '';
+  if (candidate) {
+    const q = candidate.quadrant_support || [];
+    const gradient = candidate.gradient_band_mean == null ? '—' : candidate.gradient_band_mean.toFixed(2);
+    const adjacent = candidate.gradient_adjacent_mean == null ? '—' : candidate.gradient_adjacent_mean.toFixed(2);
+    $('descriptors').textContent = '候选块 '+candidate.components.join('+')+' · 肤色支持 '+pct(candidate.raw_support)+' · 中心支持 '+pct(candidate.inner_support)+' · 四区支持（左上/右上/左下/右下） '+q.map(pct).join(' / ')+' · 边界带梯度 '+gradient+' · 外邻带梯度 '+adjacent;
+    metrics += row(stages.local,candidate.metrics?.local)+row(stages.final,candidate.metrics?.final);
+    if (candidate.refine_status === 'ok') {
+      $('board').src = base+candidate.id+'-stages.png';
+      $('board-link').href = $('board').src;
+      $('final-link').href = base+candidate.id+'-final.png';
+      $('changes-raw').textContent = changeText('相对原始阈值',candidate.changes_from_raw);
+      $('changes-local').textContent = changeText('相对仅限制外椭圆',candidate.changes_from_local);
+    }
+  }
+  $('metrics').innerHTML = metrics;
+}
+
+function showVariant() {
+  const variant = $('variant').value;
+  const info = current.variants[variant];
+  const base = 'assets/'+current.id+'/';
+  $('weak').src = base+variant+'-weak.png';
+  $('components').src = base+variant+'-components.jpg';
+  $('candidate').replaceChildren(...info.candidates.map(c => new Option(c.id+' · '+(c.kind==='single'?'单块 ':'组合 ')+c.components.join('+')+' · '+c.area+' px',c.id)));
+  $('candidate').disabled = !info.candidates.length;
+  if (info.candidates.length) $('candidate').value = info.candidates[0].id;
+  showCandidate();
+}
+
+function showImage(index) {
+  const record = images[index];
+  if (!record) return;
+  current = record;
+  $('sample').selectedIndex = index;
+  $('title').textContent = splits[record.split]+' · '+record.id.split('_').at(-1);
+  $('position').textContent = (index+1)+' / '+images.length;
+  $('prev').disabled = index===0;
+  $('next').disabled = index===images.length-1;
+  const base = 'assets/'+record.id+'/';
+  $('original').src = base+'original.jpg';
+  $('raw').src = base+'raw.png';
+  $('gradient').src = base+'gradient.png';
+  showVariant();
+}
+
+function refresh() {
+  const query = $('search').value.trim();
+  images = data.records.filter(r => ($('split').value==='all'||r.split===$('split').value)&&r.id.includes(query));
+  images.sort((a,b) => a.id.localeCompare(b.id));
+  $('sample').replaceChildren(...images.map(r => new Option(r.id.split('_').at(-1)+' · '+splits[r.split],r.id)));
+  $('sample').disabled = !images.length;
+  $('viewer').hidden = !images.length;
+  $('empty').hidden = !!images.length;
+  $('count').textContent = '匹配 '+images.length+' 张';
+  if (images.length) showImage(0);
+}
+
+const config = data.config;
+$('settings').textContent = '本轮参数 · k='+config.k+' · 弱操作 '+config.weak_kernel+'×'+config.weak_kernel+' · 内部闭运算 '+config.strong_kernel+'×'+config.strong_kernel+' · 内外轴长比例 '+config.refine_inner_scale+' / '+config.refine_outer_scale;
+$('split').replaceChildren(...Object.keys(data.summary).map(s => new Option(splits[s],s)),new Option('全部','all'));
+$('split').value = data.summary.validation ? 'validation' : Object.keys(data.summary)[0];
+$('variant').replaceChildren(...Object.entries(data.variants).map(([key,label]) => new Option(label,key)));
+$('variant').value = 'raw';
+let summaryRows = '';
+for (const [split,summary] of Object.entries(data.summary)) {
+  for (const [variant,info] of Object.entries(summary.variants)) {
+    for (const [stage,score] of Object.entries(info.scores)) {
+      const m = score?.global || {};
+      summaryRows += '<tr><td>'+splits[split]+' / '+data.variants[variant]+' / '+stages[stage]+'</td>'+cells([info.paired_images,pct(m.precision),pct(m.recall),pct(m.f1),pct(m.iou)])+'</tr>';
+    }
+  }
+}
+$('summary').innerHTML = summaryRows;
+$('split').onchange = refresh;
+$('search').oninput = refresh;
+$('sample').onchange = () => showImage($('sample').selectedIndex);
+$('variant').onchange = showVariant;
+$('candidate').onchange = showCandidate;
+$('prev').onclick = () => showImage($('sample').selectedIndex-1);
+$('next').onclick = () => showImage($('sample').selectedIndex+1);
+document.addEventListener('keydown',event => {
+  if (['INPUT','SELECT','BUTTON'].includes(event.target.tagName)) return;
+  if (event.key==='ArrowLeft'||event.key==='ArrowRight') {
+    event.preventDefault();
+    showImage($('sample').selectedIndex+(event.key==='ArrowLeft'?-1:1));
+  }
+});
+refresh();
+</script>
+</body>
+</html>

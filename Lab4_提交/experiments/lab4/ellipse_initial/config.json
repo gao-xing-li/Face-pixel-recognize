@@ -1,0 +1,9 @@
+{
+  "k": 1.25,
+  "min_component_area": 128,
+  "max_box_gap": 32,
+  "max_chroma_distance": 12,
+  "neighbors_per_component": 2,
+  "max_points_per_contour": 256,
+  "inner_scale": 0.6
+}

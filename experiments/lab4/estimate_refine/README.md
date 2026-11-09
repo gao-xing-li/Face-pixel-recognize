@@ -1,5 +1,7 @@
 # Lab4 一轮估计与修整
 
+这是从肤色轮廓出发的早期试验。最终双眼引导方案见 [双椭圆形态学实验](../dual_ellipse_morph/README.md)。
+
 从原始肤色阈值、小尺度闭运算、小尺度开运算三个版本产生椭圆候选，分别进行一次局部修整。复用相邻 `ellipse_check` 的候选与拟合模块，以及公共数据、填孔和评价函数。
 
 ## 运行
@@ -7,7 +9,7 @@
 在仓库根目录执行：
 
 ```powershell
-python experiments/lab4/estimate_refine/run.py --output results/lab4_estimate_refine_20261108
+python experiments/lab4/estimate_refine/run.py --output work/lab4_estimate_refine
 ```
 
 默认生成全部 32 张验证图。可通过 `--splits validation test train` 扩展查看，通过 `--config 路径` 调整参数，每次指定一个新输出目录。打开生成目录 `index.html` 即可离线查看。分享整个目录即可。

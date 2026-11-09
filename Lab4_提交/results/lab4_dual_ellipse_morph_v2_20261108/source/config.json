@@ -1,0 +1,41 @@
+{
+  "k": 1.25,
+  "max_components": 3,
+  "min_roi_width_fraction": 0.20,
+  "roi_padding_fraction": 0.12,
+  "search_y_fraction": [0.12, 0.65],
+  "blackhat_kernel_fraction": [0.13, 0.07],
+  "minimum_response": 12,
+  "eye_width_fraction": [0.025, 0.25],
+  "eye_height_fraction": [0.012, 0.16],
+  "eye_area_fraction": [0.00035, 0.025],
+  "eye_aspect_ratio": [0.65, 7.0],
+  "pair_distance_fraction": [0.18, 0.65],
+  "max_pair_angle_degrees": 25,
+  "min_pair_area_ratio": 0.20,
+  "display_pairs": 5,
+  "position_prior": {
+    "mode": "paired_eyes",
+    "weight": 0.65,
+    "minimum_sigma_fraction": [0.025, 0.018],
+    "window_radius_sigma": 3.0
+  },
+  "minimum_geometry_samples": 5,
+  "pose_shift_fraction": 0.16,
+  "inner_scale": 0.82,
+  "outer_scale": 1.20,
+  "weak_kernel": 5,
+  "strong_kernel": 11,
+  "minimum_core_pixels": 24,
+  "low_support_threshold": 0.18,
+  "reconstruction_k": 2.00,
+  "reconstruction_close_kernel": 27,
+  "minimum_reconstruction_seed_pixels": 24,
+  "center_candidate_penalty": 0.06,
+  "score_weights": {
+    "inner_support": 0.55,
+    "outer_support": 0.20,
+    "retained_fraction": 0.20,
+    "boundary_occupancy": 0.15
+  }
+}

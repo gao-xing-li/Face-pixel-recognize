@@ -2,8 +2,8 @@
 
 ## 入口与编译
 
-- 正文入口：`main_new.tex` 与 `main.tex`（生成 `main_new.pdf`、`main.pdf`，并同步至仓库根目录 `报告.pdf`）。
-- 在 `report/人脸分割实验报告/` 目录下执行 `tectonic main_new.tex` 或 `xelatex main_new.tex` 两次即可生成 PDF。
+- 推荐从 `main_new.tex` 编译，`main.tex` 保留为同内容入口。核对生成的 `main_new.pdf` 后，将同一份 PDF 同步为 `main.pdf` 和仓库根目录的 `报告.pdf`。
+- 在本目录执行 `tectonic main_new.tex`，或执行两次 `xelatex main_new.tex`，更新目录和交叉引用。
 - 章节源码位于 `sections_new/`；图片位于同目录 `images/`，通过 `\graphicspath{{images/}}` 解析。
 
 ## 章节结构
@@ -21,4 +21,5 @@
 ## 注意事项
 
 - 需要 `tikz` 与 `pgfplots`（第 6 章精确率—召回率工作点对比图）。
+- 模板优先使用 FangSong，缺少该字体时使用 Fandol 仿宋。生成后检查 PDF 字体嵌入，并渲染检查页眉和代码中的中文注释。
 - 封面姓名、学号、学院、专业保持留空，提交前按个人情况填写。
