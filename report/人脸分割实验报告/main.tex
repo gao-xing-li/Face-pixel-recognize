@@ -1,6 +1,36 @@
 %!TeX program = xelatex
 \documentclass{SYSUReport}
 \usepackage{array,tabularx,placeins,caption,float}
+\usepackage{amsmath,amssymb}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
+\usepackage{listings}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{}
+\lstdefinestyle{pycode}{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{myteal}\bfseries,
+  commentstyle=\color{gray!80!black},
+  stringstyle=\color{orange!60!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=6pt,
+  frame=single,
+  rulecolor=\color{gray!45},
+  backgroundcolor=\color{gray!6},
+  breaklines=true,
+  breakatwhitespace=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=4,
+  xleftmargin=1.6em,
+  xrightmargin=0.2em,
+  aboveskip=6pt,
+  belowskip=8pt,
+}
+\lstset{style=pycode}
 \captionsetup{font=small,labelfont=bf,skip=7pt}
 \setlength{\headheight}{16pt}
 \setlength{\parskip}{0.2em}
@@ -15,15 +45,15 @@
 \IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{}
 \headl{数字图像处理}
 \headc{}
-\headr{基于颜色的人脸分割}
+\headr{基于双眼定位与双椭圆约束的人脸分割}
 \lessonTitle{数字图像处理实验报告}
-\reportTitle{基于颜色的人脸分割}
+\reportTitle{基于双眼定位与双椭圆形态学约束的人脸分割实验报告}
 \stuname{}
 \stuid{}
 \inst{}
 \major{}
-\date{2026 年 11 月 8 日}
-\hypersetup{pdftitle={基于颜色与双椭圆几何先验的人脸分割},pdfauthor={},pdfsubject={数据准备、肤色统计、颜色分割与双椭圆形态学优化}}
+\date{2026 年 11 月 9 日}
+\hypersetup{pdftitle={基于双眼定位与双椭圆形态学约束的人脸分割实验报告},pdfauthor={},pdfsubject={YCrCb肤色分割、双眼定位、双椭圆空间约束与低支持度形态学重建}}
 \graphicspath{{images/}}
 \begin{document}
 \hypersetup{pageanchor=false}
@@ -32,38 +62,69 @@
 \clearpage
 \pagenumbering{Roman}
 \hypersetup{pageanchor=true}
+
+\begin{abstract}
+本报告在前期基于 YCrCb 颜色空间的人脸分割实验（实验三）基础上，围绕“减少最大连通域筛选造成的脸部碎片丢失”与“抑制头发、脖颈等粘连区域的误检扩张”两个方向展开后续改进（实验四）。前期实验使用 162 张带像素级标签的 $512\times512$ 人脸图像（按 98/32/32 划分为训练集、验证集与测试集），采用 $k=1.25$ 的 Cr/Cb 矩形阈值配合最大连通域筛选与内部填孔，在测试集上取得全局 F1 70.69\%，在验证集上取得全局 F1 72.70\%；继续加入 $41\times41$ 膨胀—填孔—腐蚀补全后，召回率有所上升但精确率同步下降，F1 基本不变。
+
+针对这一现象，实验四固定在 32 张验证集上逐步开展实验。首先对比了最大连通域筛选前后的像素变化，并尝试在原始阈值、$5\times5$ 闭运算和 $5\times5$ 开运算结果上直接拟合肤色轮廓椭圆；观察发现，待修整的肤色轮廓本身容易被粘连背景拉偏或局限于局部小碎片，简单开闭预操作也难以同时兼顾连接与分离。随后转向利用灰度图的明暗特征定位双眼：通过灰度黑帽变换提取眼部暗斑，结合训练集统计出的左右眼搜索窗口与两级面积比回退规则，在 31 张验证图上获得双眼配对，1 张无配对样本回退至实验三结果。在此基础上，以双眼中点、眼距和倾角生成正中及左右侧向偏移的候选椭圆，并按 $0.82$ 与 $1.20$ 倍轴长构造内外嵌套双椭圆：外椭圆裁剪越界的头发与脖颈误检，过渡区仅做 $5\times5$ 弱闭运算，内椭圆做 $11\times11$ 闭运算与填孔；当内椭圆中的原有掩膜占比低于 $0.18$ 时，在内椭圆内将肤色阈值放宽到 $k=2.00$ 并结合 $27\times27$ 闭运算与种子连通过滤恢复缺失内脸。在 32 张验证图上，改进流程将全局 Precision 从 64.86\% 提高到 79.88\%，Recall 从 82.70\% 提高到 86.15\%，全局 F1 从 72.70\% 提高到 82.89\%，IoU 从 57.11\% 提高到 70.79\%。
+
+\noindent\textbf{关键词：}人脸分割；YCrCb 颜色空间；黑帽变换；双眼定位；双椭圆约束；形态学操作
+\end{abstract}
+
+\clearpage
 \tableofcontents
 \clearpage
 \pagenumbering{arabic}
-\input{sections/background}
+
+\input{sections_new/01_intro}
 \FloatBarrier
-\input{sections/method_validation}
+\input{sections_new/02_data}
 \FloatBarrier
-\input{sections/test_analysis}
+\input{sections_new/03_model}
 \FloatBarrier
-\input{sections/supplementary_morphology}
+\input{sections_new/04_test}
 \FloatBarrier
-\input{sections/lab4_optimization}
+\input{sections_new/05_completion}
 \FloatBarrier
-\clearpage
-\input{sections/conclusion}
+\input{sections_new/06_boundary}
 \FloatBarrier
+\input{sections_new/07_conclusion}
+\FloatBarrier
+
 \begin{thebibliography}{9}
-\bibitem{boundaryiou}
-Cheng B, Girshick R, Doll\'{a}r P, et al.
-Boundary IoU: Improving Object-Centric Image Segmentation Evaluation[C].
-Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, 2021: 15334--15342.
 \bibitem{hsu2002face}
 Hsu R L, Abdel-Mottaleb M, Jain A K.
-Face Detection in Color Images[J].
+Face detection in color images[J].
 IEEE Transactions on Pattern Analysis and Machine Intelligence, 2002, 24(5): 696--706.
+
+\bibitem{vezhnevets2003survey}
+Vezhnevets V, Sazonov V, Andreeva A.
+A survey on pixel-based skin color detection techniques[C].
+Proceedings of GraphiCon, 2003: 85--92.
+
+\bibitem{kovac2003skin}
+Kovac J, Peer P, Solina F.
+Human skin color clustering for face detection[C].
+Proceedings of IEEE EUROCON, 2003, 2: 144--148.
+
+\bibitem{cheng2021boundary}
+Cheng B, Girshick R, Doll\'{a}r P, et al.
+Boundary IoU: Improving object-centric image segmentation evaluation[C].
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, 2021: 15334--15342.
+
 \bibitem{wang1999frontal}
 Wang J G, Sung E.
-Frontal-View Face Detection and Facial Feature Extraction Using Color and Morphological Operations[J].
+Frontal-view face detection and facial feature extraction using color and morphological operations[J].
 Pattern Recognition Letters, 1999, 20(10): 1053--1068.
+
+\bibitem{chai1999face}
+Chai D, Ngan K N.
+Face segmentation using skin-color map in videophone applications[J].
+IEEE Transactions on Circuits and Systems for Video Technology, 1999, 9(4): 551--564.
+
 \bibitem{garcia1999face}
 Garcia C, Tziritas G.
-Face Detection Using Quantized Skin Color Regions Merging and Wavelet Packet Analysis[J].
+Face detection using quantized skin color regions merging and wavelet packet analysis[J].
 IEEE Transactions on Multimedia, 1999, 1(3): 264--277.
 \end{thebibliography}
 \end{document}

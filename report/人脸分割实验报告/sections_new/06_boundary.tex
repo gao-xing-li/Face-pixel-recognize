@@ -1,116 +1,159 @@
-\section{基础颜色模型的能力边界与适用范围}\label{sec:boundary}
+\section{验证集结果对照、消融分析与样本讨论}\label{sec:results}
 
-综合前五章的实验数据，本章从算法结构、工作点轨迹以及“颜色—空间—语义”三个失效层次出发，系统剖析纯颜色与基础连通域分割框架的能力上限与适用条件，为第~\ref{sec:lab4}~章的几何先验改进提供理论依据。
+\subsection{各阶段消融结果与参数选择过程}
 
-\subsection{基础模型的三项隐含先验}\label{subsec:composition}
-
-实验三的完整流程由三个基本算子串联而成，分别对应三条隐含的图像先验：
-\begin{enumerate}
-\item \textbf{色度聚集先验（Cr/Cb 矩形阈值）：}假设人脸皮肤像素均落在以训练均值为中心、$k$ 倍标准差为半宽的轴对齐色度矩形内，且非脸背景落在该矩形外；
-\item \textbf{单主体连通先验（最大 8 连通域）：}假设画面中面积最大的类肤色连通块即为目标人脸，且不与大面积头发或背景粘连；
-\item \textbf{闭合轮廓先验（内部空洞填充）：}假设眼睛、眉毛、口腔等非肤色五官完全被面部皮肤外轮廓包围，不与外部背景发生拓扑连通。
-\end{enumerate}
-可以看到，这三条先验仅涉及像素色度与二维连通拓扑，完全不包含“五官空间排布”与“人脸椭圆轮廓”等几何语义信息。因此，当拍摄光照正常、背景色差显著且面部轮廓闭合时，三条先验同时成立，算法可取得 0.85--0.93 的高 F1；一旦其中任一先验被打破，误差便会沿处理链条逐级传导甚至放大。
-
-\subsection{精确率—召回率平面上的工作点轨迹}
-
-表~\ref{tab:points} 与图~\ref{fig:pr} 将纯阈值基线、初版方案与 $41\times41$ 形态学补全方案在测试集上的表现置于同一张精确率—召回率（P--R）平面中进行比较。
+表~\ref{tab:lab4_ablation} 汇总了 32 张验证图从实验三基线到实验四各轮调整的整体指标变化。下面结合实验记录，按顺序说明每一步改动带来的变化以及最终参数的取舍原因。
 
 \begin{table}[H]
-\centering\small
-\caption{实验三各阶段方案在测试集上的工作点对比，单位为百分比}\label{tab:points}
-\begin{tabular}{lrrrrl}
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{验证集（32 张）从实验三到实验四各阶段的对照与消融结果，单位为百分比}\label{tab:lab4_ablation}
+\begin{tabular}{lrrrrrr}
 \toprule
-方案 & Precision & Recall & F1 & IoU & 主要作用机制 \\
+方案与实验阶段 & P & R & 全局 F1 & IoU & 均值 F1 & 升/降/平 \\
 \midrule
-纯阈值基线（$k=1.50$） & 52.91 & 76.82 & 62.66 & 45.63 & 初始色度筛选 \\
-初版方案（$k=1.25$ + 最大块 + 填孔） & 66.43 & 75.55 & 70.69 & 54.67 & 滤除分离背景并填补封闭五官 \\
-形态学补全（$41\times41$ 膨胀填孔腐蚀） & 63.63 & 79.55 & 70.70 & 54.68 & 闭合边缘窄缺口但伴随外缘扩张 \\
+原始颜色阈值（$k=1.25$，无后处理） & 52.43 & 60.39 & 56.13 & 39.01 & 54.92 & -- \\
+Lab3 初版（最大连通域 + 填孔） & 64.86 & 82.70 & 72.70 & 57.11 & 70.67 & 对照基线 \\
+Lab3 形态学补全（$41\times41$ 膨胀填孔腐蚀） & 61.77 & 86.22 & 71.98 & 56.22 & 71.50 & 19/13/0 \\
+Lab4 肤色轮廓椭圆一轮修整（无眼睛定位） & 65.66 & 81.96 & 72.91 & 57.37 & 71.75 & -- \\
+Lab4 双椭圆基线（$\Delta S_{\text{lat}}=0.04$，无重建） & 79.48 & 80.06 & 79.77 & 66.35 & 75.69 & 28/3/1 \\
+试验 1：提高侧向门槛（$\Delta S_{\text{lat}}=0.06$，无重建） & 79.67 & 80.01 & 79.84 & 66.45 & 75.75 & 28/3/1 \\
+试验 2A：低支持重建（$\rho_{\text{in}}<0.18, k=1.55$, 核 15） & -- & -- & 81.24 & 68.41 & -- & 29/2/1 \\
+试验 2B：低支持重建（$\rho_{\text{in}}<0.18, k=1.75$, 核 21） & -- & -- & 82.27 & 69.87 & 81.22 & 29/2/1 \\
+\textbf{试验 2C（最终采用）：低支持重建（$k=2.00$, 核 27）} & \textbf{79.88} & \textbf{86.15} & \textbf{82.89} & \textbf{70.79} & \textbf{82.19} & \textbf{29/2/1} \\
+试验 2D（过强，未采用）：低支持重建（$k=2.25$, 核 33） & -- & -- & 83.50 & -- & -- & 趋近填满 \\
+事后理想姿态上界（Oracle 选正中/左偏/右偏） & 81.18 & 87.97 & 84.44 & 73.07 & 83.75 & 诊断对照 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{enumerate}
+\item \textbf{引入双眼引导的内外双椭圆约束（Lab4 双椭圆基线）：}在尚未加入低支持重建时，仅靠双眼定位生成的双椭圆裁剪外围并做分区闭运算，验证集 Precision 就从 Lab3 的 64.86\% 提高到 79.48\%（误检像素从 998,367 减少到 454,790），全局 F1 从 72.70\% 提高到 79.77\%。这说明用眼睛定出的外椭圆能够比较好地截断延伸到脸部外侧的头发、脖颈与背景粘连。不过此时的 Recall（80.06\%）比 Lab3（82.70\%）低约 2.6 个百分点，一方面是因为正中椭圆切掉了少量边缘像素，另一方面是那几张内椭圆像素很少的漏检图还没有补回来。
+\item \textbf{调整侧向椭圆切换门槛（试验 1）：}在双椭圆基线（$\Delta S_{\text{lat}}=0.04$）中，有 3 张图像自动切换到了侧向偏移椭圆，它们的图像支持度得分比正中椭圆高出约 $0.043\text{--}0.055$。但逐图对照发现，这 3 张图之所以侧向得分略高，是因为偏移后多包进了一侧与肤色接近的发丝，实际分割 F1 反而略低于正中椭圆。将切换门槛从 $0.04$ 调高到 $\Delta S_{\text{lat}}=0.06$ 后，检出双眼的 31 张验证图全部保留正中椭圆，全局 F1 微升至 79.84\%。
+同时，表~\ref{tab:lab4_ablation} 最后一行给出了一个诊断对照：如果事后对每张图在正中、左偏、右偏三个候选中直接挑选真实 F1 最高的一个（Oracle 上界，其中 16 张选左偏、10 张选右偏、5 张选正中），全局 F1 可以达到 84.44\%（比全部用正中椭圆高 1.55 个百分点）。这说明侧向椭圆候选本身对偏转人脸确实有帮助，只是目前仅靠肤色占空比打分还不太容易把“真实侧脸”和“单侧头发干扰”区分开。
+\item \textbf{低支持度放宽阈值重建的参数推进（试验 2A--2D）：}针对 $\rho_{\text{in}}<0.18$ 的 4 张低支持图像（00548、00562、00660、00733），我们依次尝试了四组放宽阈值与闭运算核大小 $(k_{\text{rec}}, \text{核尺寸})$：
+\begin{itemize}
+\item 当取 $(1.55, 15)$（试验 2A）和 $(1.75, 21)$（试验 2B）时，4 张图的面部碎片开始逐步连上，验证集全局 F1 分别提高到 81.24\% 和 82.27\%；
+\item 当取 $(2.00, 27)$（试验 2C）时，4 张低支持图的内脸主体基本连成完整区域，验证集 Recall 从无重建时的 80.01\% 提高到 86.15\%（超过了 Lab3 的 82.70\%），同时 Precision 保持在 79.88\%，全局 F1 达到 \textbf{82.89\%}（比 Lab3 提高 10.19 个百分点），IoU 达到 \textbf{70.79\%}（比 Lab3 提高 13.68 个百分点），逐图平均 F1 达到 82.19\%（比 Lab3 提高 11.52 个百分点）；
+\item 当继续加大到 $(2.25, 33)$（试验 2D）时，虽然验证集全局 F1 数字还能再升到 83.50\%，但查看图像发现，此时闭运算核与颜色范围已经大到接近把整个内椭圆直接填满，额头上方黑发被并入脸部的风险明显增加。为了保留图像自身肤色证据的约束作用，我们没有采用试验 2D，最终停在试验 2C（$k_{\text{rec}}=2.00$，闭运算核 27）。
+\end{itemize}
+\end{enumerate}
+
+图~\ref{fig:lab4_pr} 将验证集上的五个主要阶段画在同一张精确率—召回率图上。可以看到，实验三的 $41\times41$ 形态学补全（空心橙色圆点）相对于初版（实心橙色圆点）是向右下移动，用精确率换取召回率，停留在 $F1\approx0.727$ 等值线附近；而实验四先通过双椭圆空间约束把工作点向上推高精确率（青色三角），再通过内椭圆低支持重建把召回率向右推进（红色星号），使精确率和召回率相比实验三初版都有所提高。
 
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
-    width=0.82\textwidth,
+    width=0.84\textwidth,
     height=0.58\textwidth,
     xlabel={召回率 $R$（\%）},
     ylabel={精确率 $P$（\%）},
-    xmin=50, xmax=85,
-    ymin=45, ymax=75,
-    xtick={50,55,60,65,70,75,80,85},
-    ytick={45,50,55,60,65,70,75},
+    xmin=55, xmax=92,
+    ymin=48, ymax=86,
+    xtick={55,60,65,70,75,80,85,90},
+    ytick={50,55,60,65,70,75,80,85},
     grid=major,
     grid style={draw=gray!20},
-    legend style={at={(0.02,0.98)},anchor=north west,font=\small,draw=none,fill=none},
+    legend style={at={(0.02,0.98)},anchor=north west,font=\footnotesize,draw=none,fill=none},
     tick label style={font=\small},
     label style={font=\small},
 ]
-\addplot[domain=64:85,samples=80,dashed,draw=gray!70,thick,forget plot] {70.7*x/(2*x-70.7)};
-\node[gray!80,font=\scriptsize,anchor=north west] at (axis cs:82,61.5) {$F1=0.707$};
-\addplot[domain=70:85,samples=60,dashed,draw=gray!45,forget plot] {65*x/(2*x-65)};
-\node[gray!60,font=\scriptsize,anchor=north west] at (axis cs:80,54.0) {$F1=0.65$};
-\addplot[only marks,mark=square*,mark size=2.6pt,draw=blue!60!black,fill=blue!60!black] coordinates {(76.82,52.91)};
-\addlegendentry{纯阈值基线}
-\addplot[only marks,mark=*,mark size=2.8pt,draw=myteal,fill=myteal] coordinates {(75.55,66.43)};
-\addlegendentry{初版方案（最大块+填孔）}
-\addplot[only marks,mark=o,mark size=3.2pt,draw=myteal,fill=white,mark options={line width=0.8pt}] coordinates {(79.55,63.63)};
-\addlegendentry{形态学补全（$41\times41$）}
-\node[font=\scriptsize,anchor=south west] at (axis cs:75.55,66.43) {70.69};
-\node[font=\scriptsize,anchor=north west] at (axis cs:79.55,63.63) {70.70};
-\node[font=\scriptsize,anchor=north] at (axis cs:76.82,52.91) {62.66};
+\addplot[domain=60:92,samples=80,dashed,draw=gray!55,thick,forget plot] {72.7*x/(2*x-72.7)};
+\node[gray!75,font=\scriptsize,anchor=north west] at (axis cs:85.5,63.2) {$F1=0.727$};
+\addplot[domain=70:92,samples=80,dashed,draw=myteal!70,thick,forget plot] {82.89*x/(2*x-82.89)};
+\node[myteal!85!black,font=\scriptsize,anchor=south east] at (axis cs:91.2,76.0) {$F1=0.829$};
+\addplot[only marks,mark=square*,mark size=2.6pt,draw=blue!60!black,fill=blue!60!black] coordinates {(60.39,52.43)};
+\addlegendentry{原始阈值（56.13\%）}
+\addplot[only marks,mark=*,mark size=2.8pt,draw=orange!80!black,fill=orange!80!black] coordinates {(82.70,64.86)};
+\addlegendentry{Lab3 初版（72.70\%）}
+\addplot[only marks,mark=o,mark size=3.0pt,draw=orange!80!black,fill=white,mark options={line width=0.9pt}] coordinates {(86.22,61.77)};
+\addlegendentry{Lab3 41$\times$41 补全（71.98\%）}
+\addplot[only marks,mark=triangle*,mark size=3.2pt,draw=myteal,fill=myteal] coordinates {(80.01,79.67)};
+\addlegendentry{Lab4 双椭圆无重建（79.84\%）}
+\addplot[only marks,mark=star,mark size=4.0pt,draw=red!75!black,fill=red!75!black,mark options={line width=1.1pt}] coordinates {(86.15,79.88)};
+\addlegendentry{Lab4 最终方案（82.89\%）}
+\node[font=\scriptsize,anchor=south west] at (axis cs:60.39,52.43) {56.13};
+\node[font=\scriptsize,anchor=south west] at (axis cs:82.70,64.86) {72.70};
+\node[font=\scriptsize,anchor=north east] at (axis cs:86.22,61.77) {71.98};
+\node[font=\scriptsize,anchor=south east] at (axis cs:80.01,79.67) {79.84};
+\node[font=\scriptsize,anchor=south west] at (axis cs:86.15,79.88) {\textbf{82.89}};
 \end{axis}
 \end{tikzpicture}
-\caption{实验三各方案在测试集精确率—召回率平面上的工作点分布（虚线为 F1 等值线）。}
-\label{fig:pr}
+\caption{验证集（32 张）上实验三与实验四各阶段在精确率—召回率平面上的位置对比。}
+\label{fig:lab4_pr}
 \end{figure}
 
-图~\ref{fig:pr} 直观表明：从纯阈值到初版方案，连通域筛选与填孔将工作点垂直向上推升了 13.52 个百分点的精确率，跨越至 $F1=0.707$ 等值线；而从初版方案到 $41\times41$ 形态学补全，工作点严格沿着 $F1=0.707$ 等值线向右下移动，说明无空间约束的形态学操作只能调节精确率与召回率的配比，无法突破现有特征空间的判别上限。
+\subsection{典型样本对照分析}
 
-\subsection{失效机理的四个层次}
-
-我们将基础颜色模型的失效机理归纳为颜色、空间、语义与边界四个层次，汇总于表~\ref{tab:failure}。
+在 32 张验证图中，实验四最终方案相对 Lab3 初版有 29 张 F1 提高、2 张轻微下降、1 张不变。表~\ref{tab:lab4_cases} 列出了四类不同运行分支下的代表性样本指标变化。
 
 \begin{table}[H]
 \centering\small
-\setlength{\tabcolsep}{4pt}
-\caption{基础颜色分割模型的四层失效机理与解决途径}\label{tab:failure}
-\begin{tabular}{p{1.6cm}p{3.9cm}p{5.8cm}p{3.2cm}}
+\setlength{\tabcolsep}{3.5pt}
+\caption{验证集代表性样本在 Lab3 与 Lab4 最终方案下的指标对照，单位为百分比}\label{tab:lab4_cases}
+\begin{tabular}{llrrrrrrr}
 \toprule
-失效层次 & 被打破的先验假设 & 典型实验表现 & 根本解决途径 \\
+样本编号 & 运行分支类型 & Lab3 P & Lab4 P & Lab3 R & Lab4 R & Lab3 F1 & Lab4 F1 & $\Delta$F1 \\
 \midrule
-颜色层 & 真实肤色落在 $k=1.25$ 矩形内 & 暗光或偏色下候选碎裂（00609 仅 5,685 像素，Recall 1.6\%；低亮度组 F1 仅 52.8\%） & 在可信人脸核心区内自适应放宽肤色阈值 \\
-空间层 & 最大连通块即为独立脸部 & 暖色头发形成更大连通块（00718 最大块 58,716 像素中仅 2,705 为真脸）或内脸碎片被删（00562） & 引入五官锚点与椭圆边界替代单纯面积排序 \\
-语义层 & 肤色像素均属于评测正类 & 脖颈（占 FP 23.4\%）与头发（占 FP 60.6\%）和脸部相连，连通域无法切分 & 利用外椭圆几何包络裁剪越界的头发与脖颈 \\
-边界层 & 填孔轮廓贴合真实人脸边缘 & 逐图 Mask IoU 均值 0.572，但 Boundary IoU 均值仅 0.233 & 内外分区采用不同强度的形态学核保护边缘 \\
+00548 & 严格配对 + 低支持重建 & 39.51 & 57.77 & 9.01 & 47.26 & 14.68 & 51.99 & +37.31 \\
+00562 & 严格配对 + 低支持重建 & 29.12 & 77.21 & 8.33 & 69.39 & 12.95 & 73.09 & +60.14 \\
+00660 & 严格配对 + 低支持重建 & 38.65 & 73.33 & 14.08 & 88.74 & 20.64 & 80.31 & +59.67 \\
+00733 & 严格配对 + 低支持重建 & 8.40 & 53.92 & 9.01 & 66.35 & 8.69 & 59.49 & +50.80 \\
+00611 & 严格配对 + 双椭圆裁剪 & 32.91 & 51.11 & 100.00 & 100.00 & 49.52 & 67.64 & +18.12 \\
+00632 & 严格配对 + 双椭圆裁剪 & 53.96 & 86.19 & 97.59 & 77.38 & 69.50 & 81.55 & +12.05 \\
+00655 & 放宽眼面积比恢复配对 & 82.31 & 95.69 & 66.86 & 66.22 & 73.78 & 78.27 & +4.49 \\
+00690 & 放宽眼面积比恢复配对 & 61.14 & 74.85 & 99.71 & 80.98 & 75.80 & 77.80 & +2.00 \\
+00592 & 无双眼配对回退 Lab3 & 80.96 & 80.96 & 93.92 & 93.92 & 86.96 & 86.96 & 0.00 \\
+00712 & 轻微下降（过渡带边缘） & 79.46 & 79.14 & 99.88 & 99.90 & 88.51 & 88.32 & $-0.19$ \\
+00731 & 轻微下降（过渡带边缘） & 92.35 & 92.15 & 99.72 & 99.73 & 95.89 & 95.79 & $-0.10$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-表~\ref{tab:failure} 最右侧一列直接指明了突破纯颜色模型瓶颈的四条核心途径：用五官定位确定人脸中心与尺度、用外椭圆截断粘连的头发与脖颈、在椭圆核心区内放宽肤色阈值找回暗光碎裂皮肤、并对核心区与边缘过渡区施加差异化的形态学操作。
+结合具体图像（图~\ref{fig:lab4_dual_00632} 至图~\ref{fig:lab4_dual_00655}），可以看到各环节在实际图像上的表现与代价：
 
-\subsection{基础方案的适用条件}
+\begin{enumerate}
+\item \textbf{外椭圆截断头发与背景粘连（如 00632，图~\ref{fig:lab4_dual_00632}）：}在 00632 中，棕色长发、脖颈和背景与脸部在 $k=1.25$ 下连成一大片，Lab3 的精确率只有 53.96\%（F1 为 0.6950）。与前面图~\ref{fig:lab4_contour_00632} 中直接拟合肤色轮廓被头发拉偏不同，这里由双眼定出的外椭圆把延伸到左侧和下方的 74,165 个误检像素直接裁掉，Precision 提高到 86.19\%，F1 提高到 0.8155。同时也能看到，因为人物略向画面右侧转头，正中椭圆切掉了画面右侧脸颊边缘的一部分正确像素（Recall 从 97.59\% 降到 77.38\%）；在候选对比图中，右偏侧向椭圆（\texttt{image\_right}）对右侧脸颊的保留更好，说明如果能进一步改善侧脸候选的选择规则，这类样本还有提升余地。
+\item \textbf{低支持度放宽阈值重建恢复内脸（如 00562 与 00660，图~\ref{fig:lab4_dual_00562}、图~\ref{fig:lab4_dual_00660}）：}在 00562 中，Lab3 选中的最大块主要落在发际和衣领边缘，内椭圆支持率远低于 0.18；触发内椭圆 $k=2.00$ 放宽阈值与 $27\times27$ 闭运算重建后，原本断开的额头、鼻梁与脸颊与核心种子连成一体并完成填孔，找回了 42,481 个真实脸部像素，仅新增 720 个误检像素，F1 从 0.1295 提高到 0.7309。00660 的情况类似，Lab3 仅检出下颌与脖颈局部（Recall 14.08\%），经低支持重建后找回了 38,240 个脸部像素，Recall 提高到 88.74\%，F1 从 0.2064 提高到 0.8031。而在 00548 和 00733 上，虽然 F1 也分别提高了 37.31 和 50.80 个百分点，但因为这两张图额头前有暖色刘海落在内椭圆上部，放宽阈值时也带进了一部分头发误检（Precision 分别在 57.77\% 和 53.92\%）。
+\item \textbf{放宽面积比恢复配对与无配对回退（如 00655，图~\ref{fig:lab4_dual_00655}）：}00655 因单侧眼部受刘海影响，左右眼暗斑面积比未通过 0.30 的严格下限，但在第二级放宽条件（$\ge 0.20$）下恢复了配对，生成的双椭圆帮助裁掉了下方的衣领和脖颈误检，Precision 从 82.31\% 提高到 95.69\%，F1 从 0.7378 提高到 0.7827。而唯一一张在两级规则下都未产生双眼配对的 00592，由于本身在 Lab3 下的分割已经较好（F1 为 0.8696），直接保留 Lab3 输出避免了错误画椭圆带来的风险。
+\item \textbf{轻微下降样本的原因（00712 与 00731）：}验证集中仅有的两张退步图 00712（F1 下降 0.19 个百分点）和 00731（F1 下降 0.10 个百分点），在 Lab3 下的 Recall 都已经超过 99.7\%；在双椭圆过渡环带内执行 $5\times5$ 弱闭运算时，脸颊边缘少量原本断开的发丝像素被接到了主连通块上，使 FP 略有增加。
+\end{enumerate}
 
-在未引入几何先验前，实验三基础方案在不同拍摄场景下的适用性总结如表~\ref{tab:applicability} 所示。
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\textwidth]{lab4_dual_00632.jpg}
+\caption{验证图 00632 的双椭圆约束形态学全流程对照。由双眼生成的内外椭圆截断了左侧与下方粘连的头发和背景（减少 74,165 个误检像素），F1 从 0.6950 提高到 0.8155。}
+\label{fig:lab4_dual_00632}
+\end{figure}
 
-\begin{table}[H]
-\centering\small
-\setlength{\tabcolsep}{4pt}
-\caption{实验三基础颜色分割方案的场景适用性总结}\label{tab:applicability}
-\begin{tabular}{p{4.2cm}p{7.2cm}p{3.4cm}}
-\toprule
-场景条件 & 实验表现依据 & 适用性评估 \\
-\midrule
-单人近正面、光照均匀、背景色差明显 & 测试集 11 张图像 F1 $\ge 0.85$，最高达 0.930（00610） & 非常适合 \\
-暗光、阴影分割或冷白平衡偏色 & 低亮度组 F1 降至 52.82\%，00609 与 00562 面部严重碎裂 & 需结合放宽阈值重建 \\
-暖调长发、黄褐色背景或裸露脖颈相连 & 头发与脖颈占最终 FP 的 83.98\%（00718、00632） & 需结合外椭圆几何裁剪 \\
-精细发际线与下颌边缘提取 & 测试集 Boundary IoU 均值为 0.233 & 仅适合粗粒度区域提取 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\textwidth]{lab4_dual_00562.jpg}
+\caption{验证图 00562 的低支持度放宽阈值重建对照。内椭圆支持率低于 0.18 时启用 $k=2.00$ 放宽肤色重选与 27 像素闭运算连接，在内椭圆中找回缺失的内脸主体，F1 从 0.1295 提高到 0.7309。}
+\label{fig:lab4_dual_00562}
+\end{figure}
 
-\subsection{本章小结}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\textwidth]{lab4_dual_00660.jpg}
+\caption{验证图 00660 的低支持度放宽阈值重建对照。Lab3 仅检出下颌与脖子局部（F1 为 0.2064），通过内椭圆放宽阈值重建找回了面中部与额头区域，F1 提高到 0.8031。}
+\label{fig:lab4_dual_00660}
+\end{figure}
 
-基础颜色模型的性能上限取决于其缺失的五官位置与面部几何信息，而非单一阈值系数 $k$ 或形态学核尺寸的微调。要在保持算法轻量、可解释且不依赖深度学习检测器的前提下克服表~\ref{tab:failure} 中的四层失效，关键在于将颜色统计模型与五官几何先验有机结合——下一章将详细展开实验四在这方面的设计与验证。
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\textwidth]{lab4_dual_00655.jpg}
+\caption{验证图 00655 在严格配对为空后，通过放宽左右眼面积比下限恢复双眼配对并完成双椭圆裁剪，Precision 从 82.31\% 提高到 95.69\%，F1 从 0.7378 提高到 0.7827。}
+\label{fig:lab4_dual_00655}
+\end{figure}
+
+\subsection{当前方法的局限与后续可尝试方向}
+
+综合上述过程与结果，当前这套双椭圆形态学方案还存在几处比较明确的局限：
+\begin{itemize}
+\item \textbf{验证集多轮调参的局限：}实验四中的窗口先验权重、内外椭圆缩放比例、侧向切换门槛以及低支持重建的阈值和核大小，都是在查看 32 张验证图表现的过程中逐步确定的。因此，82.89\% 的全局 F1 反映的是这套方法在当前验证集上的开发结果，要在未见图像上确认泛化幅度，还需要另外留出未参与调参的测试图像进行检验。
+\item \textbf{对人像居中对齐构图的依赖：}如第~\ref{sec:eye}~章表~\ref{tab:lab4_eyes} 所示，双眼定位的较高合格率很大程度上借助了训练集统计出的左右眼固定搜索窗。如果待处理图像中的人脸偏离画面中心、尺寸过小或旋转角度较大，固定位置的椭圆窗口就可能套不住眼睛，需要先用粗略的人脸或肤色中心来动态平移搜索窗。
+\item \textbf{侧向椭圆的选择判据还不够灵敏：}虽然我们构造了左偏和右偏椭圆候选，且事后理想选择（Oracle F1 84.44\%）表明它们对偏转人脸确有帮助，但在提高门槛避免正脸误偏移后，当前仅靠肤色占空比的打分规则还没有把这部分收益发挥出来。后续如果能结合鼻尖、嘴部位置或面部左右边缘梯度对称性来判断朝向，侧向候选会更有实际作用。
+\item \textbf{内椭圆上部的刘海混淆：}在触发低支持重建的样本（如 00548、00733）中，内椭圆上缘往往包含一部分前额刘海；当肤色阈值放宽到 $k=2.00$ 时，偏暖色的刘海容易与额头皮肤连在一起被选入前景，说明在内椭圆上部还需要结合边缘或纹理信息做进一步区分。
+\end{itemize}

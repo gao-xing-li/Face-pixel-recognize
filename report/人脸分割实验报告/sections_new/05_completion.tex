@@ -1,126 +1,81 @@
-\section{形态学补全尝试与等值线分析}\label{sec:completion}
+\section{低支持度放宽肤色重选与分区形态学连接}\label{sec:low_support}
 
-针对第~\ref{sec:test}~章归纳的第三类失败（面部主体已检出，但嘴部或眼周存在与外部背景连通的窄缺口，导致普通填孔无法恢复内部像素，如样本 00570），本章在不改变颜色阈值（$k=1.25$）的前提下，探讨引入大尺度形态学封口补全的作用机制与性能边界。
+\subsection{内椭圆像素过少时的漏检现象}
 
-\subsection{膨胀—填孔—腐蚀补全流程设计}
+在接通“双眼定位 + 内外双椭圆分区约束”的初版流程后，我们检查了 32 张验证图的结果。对于大多数在实验三中已经检出面部主体、只是外围粘连了头发或脖子的图像（例如 00611、00632），外椭圆裁剪与内椭圆闭运算已经能明显减少误检；但与此同时，有 4 张图像（00548、00562、00660、00733）的分割效果仍然很差，F1 停留在 $0.10\text{--}0.28$ 之间。
 
-当面部外轮廓存在局部窄缺口时，若在提取最大连通域之后先执行形态学膨胀，可将窄开口桥接闭合；此时原本向外敞开的五官缺失区域转化为封闭的内部空洞，即可通过漫水填孔完整恢复；最后再以相同结构元素执行形态学腐蚀，将因膨胀而向外扩张的外边界收回到原始轮廓附近。
+查看这 4 张图的中间掩膜可以发现，它们的共同问题是：**在实验三 $k=1.25$ 阈值和最大连通域筛选之后，真正落入内椭圆 $E_{\text{in}}$ 的前景像素非常少**（占内椭圆面积的比例 $\rho_{\text{in}}$ 都低于 $0.18$，例如 00562 在内椭圆里只剩下嘴角附近的一小块，00660 只选中了右下颌与脖子）。当内椭圆里几乎没有足够的初始肤色像素时，即使在内椭圆中做 $11\times11$ 闭运算和填孔，也没有东西可以连接，整张内脸依然是大片空白。
 
-与常规“先闭运算再填孔”相比，“膨胀 $\rightarrow$ 填孔 $\rightarrow$ 腐蚀”的顺序具有明确的拓扑优势：常规闭运算在填孔前即执行腐蚀，部分刚被膨胀封住的薄弱桥接处可能在腐蚀后重新断开，导致填孔依然失效；而将填孔置于膨胀与腐蚀之间，填孔直接作用于闭合状态最强的外轮廓，随后的腐蚀仅削去外围扩张层，不会撤销已填入内部的像素。核心实现见代码~\textbf{5-1}。
+\subsection{内椭圆放宽肤色阈值重选与受限重建}
 
-\noindent\textbf{代码 5-1}\quad 形态学膨胀—填孔—腐蚀补全流程（detection.py）
-\begin{lstlisting}
-count, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
-if count > 1:
-    component = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
-    mask = (labels == component).astype(np.uint8)
+为什么这几张图在 $k=1.25$ 下落入内椭圆的像素这么少？回到第~\ref{sec:intro}~章提到的训练集肤色统计可以看到，$k=1.25$ 的矩形阈值本来只覆盖了约六到七成的训练肤色像素；当图像整体偏暗、受冷光影响或面部存在较大阴影时，真实脸部皮肤的 Cr、Cb 值很容易落到 $k=1.25$ 之外，但在 $k=2.00$（训练集肤色覆盖率达 91.86\%）下其实仍能被检出。
 
-element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel, kernel))
-pad = kernel
-padded = np.pad(mask, pad)
-padded = cv2.dilate(padded, element, iterations=1, borderValue=0)
-padded = fill_holes(padded)
-padded = cv2.erode(padded, element, iterations=1, borderValue=0)
-return padded[pad:-pad, pad:-pad].astype(np.uint8)
-\end{lstlisting}
+在实验三中，我们不敢直接把全图阈值放宽到 $k=2.00$，因为全图放宽会把大片头发和背景一起变成前景。但现在已经有了由双眼定出的内椭圆 $E_{\text{in}}$，情况就不同了：如果**只在内椭圆像素明显不足的图像上，并且只允许在内椭圆 $E_{\text{in}}$ 内部**使用放宽后的肤色阈值重选像素，外围背景和远端头发就不会被放进来。
 
-实现中先提取最大 8 连通域，再按结构元素直径 \texttt{kernel} 在图像四周补零（避免贴近图像边界的前景在腐蚀阶段产生边界截断伪影），依次完成单次椭圆核膨胀、内部填孔与单次同核腐蚀后裁回原图尺寸。
-
-\subsection{验证集核尺度分析与取舍}
-
-我们在验证集上对比了椭圆结构元素尺寸 $kernel \in \{5, 9, 15, 21, 31, 41\}$ 及不同操作顺序共 15 组候选配置。实验结果显示，随着核尺寸增大，验证集召回率单调递增，但由于大核膨胀在封住面部缺口的同时也会桥接脸侧头发与下颌脖颈，精确率随之下降。在“全局 F1 相对初版损失不超过 1 个百分点（$\Delta\text{F1}\ge -1.0\%$）的前提下最大化 Recall”的准则下，选定 $41\times41$ 椭圆核作为补全配置。验证集对比结果如表~\ref{tab:v2val} 所示。
-
-\begin{table}[H]
-\centering\small
-\caption{验证集上初版方案与 $41\times41$ 形态学补全方案的对比，单位为百分比}\label{tab:v2val}
-\begin{tabular}{lrrrr}
-\toprule
-方案 & Precision & Recall & F1 & IoU \\
-\midrule
-初版方案（最大块 + 填孔） & 64.86 & 82.70 & 72.70 & 57.11 \\
-形态学补全方案（$41\times41$ 膨胀—填孔—腐蚀） & 61.77 & 86.22 & 71.98 & 56.22 \\
-变化（百分点） & $-3.09$ & +3.52 & $-0.72$ & $-0.89$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-在验证集上，$41\times41$ 补全减少了 78,523 个漏检像素（FN 降幅 20.37\%），使 Recall 提升 3.52 个百分点（达 86.22\%）；但同时增加了 190,636 个误检像素，使 Precision 下降 3.09 个百分点，全局 F1 略降 0.72 个百分点。
-
-\subsection{测试集表现与新增像素语义分解}
-
-将上述 $41\times41$ 补全方案应用于 32 张测试图，其与初版方案的对比结果及新增前景像素的语义来源分别见表~\ref{tab:v2test} 和表~\ref{tab:newpixels}。
-
-\begin{table}[H]
-\centering\small
-\caption{测试集上初版方案与形态学补全方案的对比，单位为百分比}\label{tab:v2test}
-\begin{tabular}{lrrrr}
-\toprule
-方案 & Precision & Recall & F1 & IoU \\
-\midrule
-初版方案 & 66.43 & 75.55 & 70.69 & 54.67 \\
-形态学补全方案（$41\times41$） & 63.63 & 79.55 & 70.70 & 54.68 \\
-变化（百分点） & $-2.80$ & +4.00 & +0.01 & +0.01 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\centering\small
-\caption{测试集上形态学补全新增前景像素的语义来源分解}\label{tab:newpixels}
-\begin{tabular}{lrr}
-\toprule
-真实语义区域 & 新增正确像素（$\Delta$TP） & 新增误检像素（$\Delta$FP） \\
-\midrule
-皮肤与鼻子 & 68,758 & 0 \\
-双眼、双眉、口腔与上下唇 & 17,292 & 0 \\
-头发 & 0 & 116,896 \\
-背景 & 0 & 20,534 \\
-脖颈 & 0 & 13,043 \\
-其他负类 & 0 & 6,236 \\
-\midrule
-合计 & 86,050 & 156,709 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-测试集呈现出与验证集高度一致的规律：
+按照这一思路，我们将“核心种子提取”和“低支持度放宽阈值重建”整理为以下三个步骤：
 \begin{enumerate}
-\item \textbf{单调扩张特性：}补全后 TP 从 1,624,818 增至 1,710,868（+86,050），FN 同步减少 86,050，表明“膨胀—填孔—腐蚀”完整保留了初版掩膜的全部前景像素，所有变化均来自新增的 242,759 个扩张像素。
-\item \textbf{五官恢复与头发误检的伴生关系：}在新增像素中，86,050 个属于真实脸部（占比 35.45\%），其中五官像素 17,292 个，将五官组召回率从 68.32\% 进一步推高至 79.11\%；然而其余 156,709 个新增像素均属误检（占比 64.55\%），其中头发单独占新增误检的 74.59\%（116,896 像素）。
-\item \textbf{F1 等值线平衡：}由于每找回 1 个真实脸部像素平均伴随引入约 1.82 个非脸误检像素，Recall 提升 4.00 个百分点的收益与 Precision 下降 2.80 个百分点的代价在调和平均下恰好相互抵消，使得全局 F1（70.69\% 对 70.70\%）与 IoU（54.67\% 对 54.68\%）几乎保持不变。
+\item \textbf{提取高可信核心种子并计算内椭圆支持率：}设实验三输出的掩膜为 $M_{\text{Lab3}}$，先用外椭圆裁剪得到 $M_{\text{local}} = M_{\text{Lab3}} \cap E_{\text{out}}$，并在其中提取与内椭圆 $E_{\text{in}}$ 重叠像素数不少于 $N_{\text{core}}=24$ 的 8 连通分量，合记为 $M_{\text{sel}}$；若没有任何分量满足条件，则退一步保留 $M_{\text{local}}$ 中的最大连通块。将 $M_{\text{sel}}$ 落在内椭圆中的部分记为核心种子 $S = M_{\text{sel}} \cap E_{\text{in}}$，并计算内椭圆支持率
+\begin{equation}
+\rho_{\text{in}} = \frac{|S|}{|E_{\text{in}}|}.
+\label{eq:innersupport}
+\end{equation}
+\item \textbf{判断低支持度并引入放宽肤色候选：}当 $\rho_{\text{in}} \ge 0.18$ 时，说明内椭圆中已有较多初始肤色像素，无需额外重选；当 $\rho_{\text{in}} < 0.18$ 时，判定该图内椭圆像素过少，计算阈值系数放宽至 $k_{\text{rec}}=2.00$ 时的肤色二值掩膜 $M_{\text{relax}}$，并截取其内椭圆部分 $M_{\text{relax}} \cap E_{\text{in}}$。
+\item \textbf{闭运算连接与核心种子重叠过滤：}在 $E_{\text{in}}$ 内部，对 $M_{\text{relax}} \cap E_{\text{in}}$ 执行一次较大尺度的椭圆核闭运算（最终选用 $27\times27$ 核），把分散的脸部皮肤块连接成片，再与核心种子 $S$ 取并集：
+\begin{equation}
+A = \bigl(\operatorname{Close}_{27}(M_{\text{relax}}\cap E_{\text{in}})\cap E_{\text{in}}\bigr)\cup S.
+\label{eq:allowmask}
+\end{equation}
+考虑到即使在内椭圆内部，放宽阈值后额头边缘也可能出现少量孤立的刘海误检块，我们对 $A$ 做 8 连通域分解，只保留与初始核心种子 $S$ 重叠像素数不少于 $24$ 的连通分量，最后在 $E_{\text{in}}$ 内部做一次漫水填孔，得到重建掩膜 $M_{\text{rec}}$：
+\begin{equation}
+M_{\text{rec}} = \operatorname{FillHoles}\!\left(\bigcup_{C_j\in\mathcal{C}_8(A):\,|C_j\cap S|\ge 24} C_j\right)\cap E_{\text{in}}.
+\label{eq:lowsupport}
+\end{equation}
 \end{enumerate}
 
-\subsection{典型样本收益与代价的图像对照}
+这样处理后，新增像素一方面被严格限制在内椭圆 $E_{\text{in}}$ 内部，另一方面必须通过放宽后的肤色闭运算与原有的高可信种子 $S$ 连成一体才会被保留，避免了不看图像肤色、直接把整个内椭圆涂满的做法。
 
-图~\ref{fig:00570} 至图~\ref{fig:00578} 展示了四类代表性样本在形态学补全前后的直观对比：
-\begin{itemize}
-\item \textbf{窄开口有效闭合（00570，图~\ref{fig:00570}）：}嘴部横向缺口被成功封住并填实，新增 4,367 个 TP 像素与 1,247 个 FP 像素，Recall 从 63.1\% 升至 70.7\%，F1 从 0.759 提升至 0.803。
-\item \textbf{大块面部凹陷恢复但伴随边缘外扩（00537，图~\ref{fig:00537}）：}补全找回了右侧脸颊大块缺失（新增 25,174 个 TP 像素，Recall 从 52.98\% 跃升至 99.89\%，F1 从 0.584 升至 0.803），但同时也将脸侧头发与肩颈一并包入（新增 11,119 个 FP 像素）。
-\item \textbf{错误主体继续扩张（00578，图~\ref{fig:00578}）：}当最大连通域原本已落入棕色头发时，$41\times41$ 补全沿头发轮廓大幅扩张，新增 22,692 个 FP 像素而仅恢复 1,505 个 TP 像素，F1 停留在 0.105。
-\item \textbf{完整主体过度扩张（00647）：}初版 Recall 已达 99.58\%，继续执行大核补全仅新增 117 个 TP 像素，却引入 19,907 个外围误检像素，导致 F1 从 0.720 降至 0.662。
-\end{itemize}
+\subsection{内外分区形态学操作与整体连接流程}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.94\textwidth]{morphology_00570.png}
-\caption{样本 00570 初版与形态学补全预测对照：嘴部窄开口得以闭合填补，F1 从 0.759 升至 0.803。}
-\label{fig:00570}
-\end{figure}
+无论是常规样本还是触发了低支持重建的样本，最后都需要将内椭圆核心区与内外椭圆之间的过渡环带合成为完整的人脸掩膜。按第~\ref{sec:dual_ellipse}~章划定的三个空间区域，分区形态学连接的具体执行顺序如下：
+\begin{enumerate}
+\item \textbf{内椭圆核心区处理：}对保留的核心候选 $M_{\text{sel}}$ 执行 $11\times11$ 椭圆核闭运算并填孔，截取其落在内椭圆 $E_{\text{in}}$ 内的部分；若当前样本触发了低支持度重建（$\rho_{\text{in}}<0.18$），则将重建结果 $M_{\text{rec}}$ 一并并入核心区掩膜 $M_{\text{strong}}$：
+\begin{equation}
+M_{\text{strong}} = \bigl(\operatorname{FillHoles}(\operatorname{Close}_{11}(M_{\text{sel}}))\cap E_{\text{in}}\bigr) \cup M_{\text{rec}}.
+\label{eq:mstrong}
+\end{equation}
+\item \textbf{过渡环带处理：}对 $M_{\text{sel}}$ 执行 $5\times5$ 椭圆核弱闭运算，仅截取其落在过渡环带 $E_{\text{out}}\setminus E_{\text{in}}$ 内的部分，记为 $M_{\text{weak}}$：
+\begin{equation}
+M_{\text{weak}} = \operatorname{Close}_{5}(M_{\text{sel}})\cap (E_{\text{out}}\setminus E_{\text{in}}).
+\label{eq:mweak}
+\end{equation}
+\item \textbf{合并、种子连通过滤与最终填孔：}将核心区与过渡环带合并为候选掩膜 $M_{\text{prop}} = M_{\text{strong}} \cup M_{\text{weak}}$。为防止过渡环带中残留与面部主体断开的孤立碎块，再次对 $M_{\text{prop}}$ 提取 8 连通域，仅保留与核心种子 $S$ 相交的连通分量，最后做一次内部填孔并限制在 $E_{\text{out}}$ 内，得到最终分割掩膜 $M_{\text{final}}$：
+\begin{equation}
+M_{\text{final}} = \operatorname{FillHoles}\!\left(\bigcup_{C_j\in\mathcal{C}_8(M_{\text{prop}}):\,C_j\cap S\neq\emptyset} C_j\right)\cap E_{\text{out}}.
+\label{eq:zonalmorph}
+\end{equation}
+\end{enumerate}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.94\textwidth]{morphology_00537.png}
-\caption{样本 00537 初版与形态学补全预测对照：大面积面部漏检被补回，同时脸侧头发误检有所增加。}
-\label{fig:00537}
-\end{figure}
+代码~\textbf{5-1} 列出了低支持度重建与内外分区形态学连接的核心实现。
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.94\textwidth]{morphology_00578.png}
-\caption{样本 00578 初版与形态学补全预测对照：当初版最大连通域误选头发时，无约束补全仅放大头发误检。}
-\label{fig:00578}
-\end{figure}
+\noindent\textbf{代码 5-1}\quad 低支持放宽阈值重建与双椭圆分区形态学连接（dual\_ellipse.py）
+\begin{lstlisting}
+def reconstruct_low_support(relaxed, seed, inner, kernel_size, minimum_seed_pixels):
+    allowed = morphology(relaxed & inner, cv2.MORPH_CLOSE, kernel_size) & inner
+    allowed |= seed & inner
+    count, labels = cv2.connectedComponents(allowed, connectivity=8)
+    retained = [c for c in range(1, count)
+                if np.count_nonzero((labels == c) & seed.astype(bool)) >= minimum_seed_pixels]
+    return fill_holes(np.isin(labels, retained).astype(np.uint8)) & inner
 
-\subsection{本章小结：无约束形态学的作用边界}
-
-上述实验表明，在缺乏人脸位置与形状边界约束的条件下，全图统一的形态学“膨胀—填孔—腐蚀”本质上是一个**工作点平移算子**：它将分割工作点从“偏高精确率、偏低召回率”沿 $F1\approx 70.7\%$ 等值线推向“偏高召回率、偏低精确率”，但并未赋予算法区分“面部内部缺口”与“面部外围头发粘连”的几何判别能力。要真正把整条精确率—召回率曲线推向更高水平，必须明确回答“人脸的核心区在哪里、外边界在哪里”——这正是第~\ref{sec:lab4}~章引入双眼定位与双椭圆空间约束的核心动因。
+# 分区形态学连接：内椭圆强闭运算+低支持重建，过渡区弱闭运算，种子连通锚定
+weak = morphology(selected, cv2.MORPH_CLOSE, config["weak_kernel"]) & outer
+strong = fill_holes(morphology(selected, cv2.MORPH_CLOSE, config["strong_kernel"])) & inner
+if relaxed is not None and inner_support < config["low_support_threshold"]:
+    strong |= reconstruct_low_support(relaxed, seed, inner,
+                                      config["reconstruction_close_kernel"],
+                                      config["minimum_reconstruction_seed_pixels"])
+proposal = strong | (weak & (outer & (1 - inner)))
+count, labels = cv2.connectedComponents(proposal, connectivity=8)
+anchor_labels = np.unique(labels[seed.astype(bool)])
+final = fill_holes(np.isin(labels, anchor_labels[anchor_labels > 0]).astype(np.uint8)) & outer
+\end{lstlisting}

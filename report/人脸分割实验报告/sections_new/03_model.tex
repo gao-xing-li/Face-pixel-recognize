@@ -1,151 +1,103 @@
-\section{颜色模型与初版方案}\label{sec:model}
+\section{基于灰度黑帽变换与位置窗口的双眼定位}\label{sec:eye}
 
-\subsection{YCrCb 颜色空间转换}
+\subsection{利用灰度暗部特征寻找眼睛的思路}
 
-RGB 颜色空间中三个通道同时受光照强度与物体表面反射属性影响，明暗变化会直接引起各通道数值同步偏移。YCrCb 空间将亮度信息分离至 $Y$ 通道，而由 $Cr$、$Cb$ 两个色度差通道表征颜色信息。按 ITU-R BT.601 标准，RGB 到 YCrCb 的转换关系为：
+在前面的实验中，图像转换到 YCrCb 空间后只保留了 Cr 和 Cb 两个色度通道，亮度信息被完全舍弃。但在观察人像原图时可以看到，即使肤色阈值受到光照偏色或阴影的干扰，双眼在灰度图中通常仍表现为两处尺度相近、近似水平排列的局部暗斑\cite{hsu2002face}。如果能够利用这一明暗结构先定位双眼，就可以由两眼的中点、间距和连线倾角来估计脸部椭圆的位置、大小与朝向，从而减少对肤色外轮廓的依赖。
+
+基于这一想法，我们在不使用预训练人脸或眼睛检测器的条件下，尝试用灰度形态学中的黑帽变换（Black-Hat Transform）提取局部暗部候选。设输入灰度图为 $I_{\text{gray}}$，先做 $3\times3$ 高斯平滑抑制细碎噪点，再用横向椭圆形结构元素 $B_{\text{bh}}$ 执行闭运算并减去平滑后的灰度图：
 \begin{equation}
-\begin{aligned}
-Y &= 0.299R + 0.587G + 0.114B,\\
-Cr &= 0.713(R-Y) + 128,\\
-Cb &= 0.564(B-Y) + 128.
-\end{aligned}
-\label{eq:ycbcr}
+R_{\text{bh}}(x,y) = \bigl((I_{\text{gray}} * G_{3\times3}) \bullet B_{\text{bh}}\bigr)(x,y) - (I_{\text{gray}} * G_{3\times3})(x,y),
+\label{eq:blackhat}
 \end{equation}
-实现中按 BGR 顺序读取 8 位图像，调用 OpenCV 的 \texttt{COLOR\_BGR2YCrCb} 完成转换，各通道取值范围为 0--255。
+其中 $B_{\text{bh}}$ 的宽高按粗略面宽尺度 $W_s$ 的 $13\%$ 和 $7\%$ 取奇数像素（使横向略宽于纵向，贴合眼部形状）。在黑帽响应图 $R_{\text{bh}}$ 中，比周围皮肤更暗的瞳孔、睫毛和眼裂区域会产生较高的正响应。
 
-实验三仅利用 $Cr$、$Cb$ 两个色度通道构建肤色模型，依据在于人类肤色在色度平面上具有良好的聚类特性，丢弃 $Y$ 通道能够降低光照强弱变化对阈值判别的干扰\cite{hsu2002face,vezhnevets2003survey}。但与此同时，完全舍弃亮度通道也意味着模型无法直接利用明暗对比区分“与肤色色度接近的深色头发”和“真实皮肤”，也不再保留眉眼暗部等局部灰度结构信息。这一特性构成了后续实验四重新引入灰度通道定位双眼的直接动因。
+得到 $R_{\text{bh}}$ 后，取搜索区域内的 Otsu 自适应阈值 $T_{\text{Otsu}}$ 与固定下限 $12$ 中的较大值进行二值化，再经过一次 $1\times3$ 横向闭运算连接断裂的眼部暗斑。随后提取 8 连通域，按连通块面积、宽高以及长宽比范围 $[0.65, 7.0]$ 过滤掉过小噪点或细长发丝，保留下来的连通块质心作为单眼候选点。
 
-\subsection{训练集肤色分布统计}
-
-从 98 张训练图像中提取全部皮肤（标签 1）与鼻子（标签 2）像素，共计 $5{,}838{,}561+548{,}991=6{,}387{,}552$ 个像素。采用像素级等权汇总计算总体均值与标准差：
+对于任意一左一右两个候选块 $(A_L, A_R)$，先检查它们的中心间距是否落在 $[0.18W_s, 0.65W_s]$ 内、连线水平倾角 $|\theta|$ 是否不超过 $25^\circ$、以及两块面积比 $r_{\text{area}}=\min(A_L,A_R)/\max(A_L,A_R)$ 是否不低于设定下限。通过几何筛选的候选对按五项归一化指标加权计算图像基础得分 $S_{\text{base}}$：
 \begin{equation}
-\mu_c=\frac{1}{N}\sum_{i=1}^{N}c_i,\qquad
-\sigma_c^2=\frac{1}{N}\sum_{i=1}^{N}(c_i-\mu_c)^2,
-\qquad c\in\{Cr,Cb\},
-\label{eq:stats}
+S_{\text{base}} = 0.25\,S_{\text{align}} + 0.15\,r_{\text{area}} + 0.15\,S_{\text{space}} + 0.25\,S_{\text{resp}} + 0.20\,S_{\text{skin}},
+\label{eq:eyebase}
 \end{equation}
-其中 $N=6{,}387{,}552$。统计结果及不同阈值系数 $k$ 下的训练集肤色覆盖率如表~\ref{tab:skin} 所示。$Cr$ 与 $Cb$ 的标准差均约为 9.4，离散尺度相近。
+其中 $S_{\text{align}} = 1 - |\theta|/25^\circ$ 反映两眼连线接近水平的程度，$r_{\text{area}}$ 反映左右候选面积的接近程度，$S_{\text{space}}$ 反映间距接近理想比例 $0.36W_s$ 的程度，$S_{\text{resp}}$ 为两候选块内部黑帽响应均值，而 $S_{\text{skin}}$ 则统计候选块外扩一圈的环形邻域内满足原始肤色阈值的像素比例（用于区分被皮肤包围的眼睛和孤立在背景中的暗斑）。
+
+\subsection{从无先验到双窗约束的三轮定位对比}
+
+单靠上述暗部与成对几何规则能否在验证集上稳定找到双眼？我们分三轮逐步做了实验与调整。
+
+在**第一轮（无位置先验）**中，我们仅在粗略肤色候选外接框的上半部分搜索暗斑，完全按式~\eqref{eq:eyebase} 的图像基础分 $S_{\text{base}}$ 排序选择最高分组合。检查 32 张验证图的结果发现，这一版虽然在 30 张图上产生了配对，但真正落在双眼附近的只有 13 张。失败的主要原因是人像上半部分除了眼睛之外，浓眉（如 00590）、刘海发梢之间的暗缝（如 00690）以及背景深色纹理同样经常形成左右对称的暗斑，且黑帽响应有时比眼睛更强。
+
+看到第一轮容易把眉毛或头发误当成眼睛后，**第二轮（双眼中点弱先验）**尝试引入训练集的双眼中点位置统计作为温和的排序参考。训练集 98 张图像中有 97 张带完整双眼标注（标签 4、5，仅样本 00615 无眼部标签），统计得到双眼中点的归一化均值约为 $(0.4988, 0.4763)$。第二轮保持候选提取范围不变，仅在总分中给靠近训练中点均值的配对加上权重为 $w_p=0.20$ 的位置分。结果显示，这只改变了少数边界样本的排序，合格数从 13/32 微升到 15/32，眉眼混淆和发丝干扰并没有得到根本缓解。
+
+分析前两轮的现象可以看到，如果候选提取阶段依然允许全脸框甚至头发区域的所有暗斑进入配对池，仅靠微弱的中心加分很难压过强响应的眉毛或刘海；同时，训练集 97 张图像的左眼中心均值 $\boldsymbol{\mu}_L=(0.3778, 0.4769)$ 和右眼中心均值 $\boldsymbol{\mu}_R=(0.6198, 0.4756)$ 在画面中的分布其实非常集中（原始标准差仅约 $0.005\text{--}0.009$）。
+
+基于这一观察，**第三轮（两眼独立窗口约束）**做了两项改动：一是将左右眼的归一化标准差下限放宽设为 $\boldsymbol{\sigma}_L=\boldsymbol{\sigma}_R=(0.025, 0.018)$，以 $3\sigma$ 椭圆窗口（在 $512\times512$ 图像上半轴约为 $38.4\times27.6$ 像素）分别作为左眼和右眼的实际搜索范围，并在各自窗口内独立计算 Otsu 阈值，不再依赖可能出错的肤色连通块外接框；二是将位置得分权重提高到 $w_p=0.65$。记候选中心 $(x_i, y_i)$ 到对应训练均值的标准化平方距离为
+\begin{equation}
+d_i^2 = \left(\frac{x_i/W - \mu_{i,x}}{\sigma_{i,x}}\right)^2 + \left(\frac{y_i/H - \mu_{i,y}}{\sigma_{i,y}}\right)^2, \qquad i\in\{L,R\},
+\label{eq:eyedist}
+\end{equation}
+则双窗位置得分为 $S_{\text{pos}}=\exp\bigl(-(d_L^2+d_R^2)/4\bigr)$，综合配对得分为
+\begin{equation}
+S_{\text{pair}} = (1 - w_p)S_{\text{base}} + w_p S_{\text{pos}}, \qquad w_p = 0.65.
+\label{eq:eyepairscore}
+\end{equation}
+
+为了客观评估三轮定位的准确程度，我们以验证集标签中的左右眼质心作为事后评价参考，计算两眼中较大的定位偏差与真实眼距的比值 $e = \max\bigl(\|\hat{\mathbf{p}}_L-\mathbf{p}_L\|_2, \|\hat{\mathbf{p}}_R-\mathbf{p}_R\|_2\bigr) / \|\mathbf{p}_R-\mathbf{p}_L\|_2$。同时，为了看清数据集本身构图对齐程度的影响，我们还增加了一组“完全不看图像、直接输出训练集双眼均值坐标”的诊断对照。四组结果汇总于表~\ref{tab:lab4_eyes}。
 
 \begin{table}[H]
-\centering\small
-\caption{训练集肤色统计参数与矩形阈值覆盖率}\label{tab:skin}
-\begin{tabular}{lrrr}
-\toprule
-通道 & 均值 $\mu$ & 总体方差 $\sigma^2$ & 标准差 $\sigma$ \\
-\midrule
-Cr & 151.1495 & 87.8810 & 9.3745 \\
-Cb & 109.1102 & 89.9380 & 9.4836 \\
-\bottomrule
-\end{tabular}
-
-\vspace{6pt}
-\begin{tabular}{lrrr}
-\toprule
-阈值系数 $k$ & 1.00 & 2.00 & 3.00 \\
-训练集肤色像素覆盖率 & 59.17\% & 91.86\% & 99.36\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\noindent\textbf{代码 3-1}\quad 训练肤色的直方图统计（modeling.py）
-\begin{lstlisting}
-mask = (labels == 1) | (labels == 2)
-ycrcb = cv2.cvtColor(bgr, cv2.COLOR_BGR2YCrCb)
-cr = ycrcb[:, :, 1][mask].astype(np.int64)
-
-counts = np.bincount(cr, minlength=256)
-n = counts.sum()
-values = np.arange(256, dtype=np.float64)
-mean = np.dot(values, counts) / n
-std = np.sqrt(np.dot((values - mean) ** 2, counts) / n)
-\end{lstlisting}
-
-代码通过累计 256 维频数直方图精确计算全体肤色像素的总体均值与标准差，避免了逐图存储大数组的内存开销。
-
-训练集肤色在 $Cr$--$Cb$ 平面上的二维联合分布如图~\ref{fig:joint} 所示。可以看到，高频肤色区域呈明显的倾斜椭圆状，两通道的皮尔逊相关系数为 $-0.7644$（协方差为 $-67.95$），即较高的 $Cr$ 往往伴随较低的 $Cb$。
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.74\textwidth]{part_a_joint_distribution.png}
-\caption{训练肤色像素的 Cr/Cb 联合分布（对数频数刻度）。}
-\label{fig:joint}
-\end{figure}
-
-表~\ref{tab:skin} 下半部分同时揭示了轴对齐矩形阈值的一个关键性质：当 $k=1.00$ 时，矩形区域仅覆盖 59.17\% 的训练肤色像素；当 $k=2.00$ 时覆盖率达到 91.86\%。这意味着若为了抑制背景误检而选择较小的 $k$（如 $k=1.25$），颜色阈值实质上只截取了肤色分布的核心高密度切片；在光照正常、肤色典型的图像上该切片足以勾勒面部主体，但在暗光或偏色图像上则容易因覆盖率不足而产生内部断裂，这也为实验四在椭圆核心区内将阈值放宽至 $k=2.00$ 提供了直接的数据依据。
-
-\subsection{判决规则与验证集选参}
-
-对任意待分割图像，像素 $(x,y)$ 同时满足下式时判定为初始肤色候选：
-\begin{equation}
-M(x,y)=
-\begin{cases}
-1, & |Cr(x,y)-\mu_{Cr}|\leq k\sigma_{Cr}\ \text{且}\ |Cb(x,y)-\mu_{Cb}|\leq k\sigma_{Cb},\\
-0, & \text{其他情况}.
-\end{cases}
-\label{eq:box}
-\end{equation}
-
-在获得二值肤色候选后，由于眼、眉、嘴等五官区域常表现为非肤色空洞，且背景中可能存在孤立的类肤色噪点，需要结合连通域与形态学后处理生成完整脸部掩膜。实验三的基础方案先按 8 连通关系保留面积最大的前景连通块，再填充不与图像边界 4 连通的内部空洞（代码~\textbf{3-2}）。
-
-\noindent\textbf{代码 3-2}\quad 阈值判决与内部空洞填充（detection.py）
-\begin{lstlisting}
-converted = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2YCrCb).astype(np.float64)
-cr, cb = converted[:, :, 1], converted[:, :, 2]
-mask = ((np.abs(cr - mean_cr) <= k * std_cr) &
-        (np.abs(cb - mean_cb) <= k * std_cb)).astype(np.uint8)
-
-def fill_holes(mask):
-    padded = np.pad(mask.astype(np.uint8), 1)
-    cv2.floodFill(padded, None, (0, 0), 2, flags=4)
-    return (padded[1:-1, 1:-1] != 2).astype(np.uint8)
-\end{lstlisting}
-
-在填孔实现中，先在掩膜外围补一圈 0 像素，再从角点 $(0,0)$ 出发执行 4 连通漫水填充标记外部背景；未被标记的 0 像素即为被前景完全包围的内部空洞，将其置为 1 即可确保即使人脸贴近图像边缘也能正确填孔。
-
-我们在 32 张验证集图像上对 9 个阈值系数 $k\in\{1.00, 1.25, \dots, 3.00\}$ 与 4 种后处理策略（无处理、仅填孔、最大连通域加填孔、$5\times5$ 闭运算后最大连通域加填孔）共 36 组配置进行网格搜索，结果如图~\ref{fig:curve} 与表~\ref{tab:post} 所示。
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.96\textwidth]{validation_curve.png}
-\caption{四种后处理方式在验证集上的参数响应曲线（横轴为阈值系数 $k$，纵轴为全局 F1）。}
-\label{fig:curve}
-\end{figure}
-
-图~\ref{fig:curve} 显示，$k\in[1.25, 1.50]$ 区间为性能平台区，其中 $k=1.25$ 配合“最大连通域加填孔”取得最高全局 F1（72.70\%）；当 $k>1.50$ 后，随着颜色阈值放宽，大面积头发、脖颈与背景被并入最大连通域，导致精确率与 F1 急剧下降。
-
-\begin{table}[H]
-\centering\small
-\caption{固定 $k=1.25$ 下四种后处理策略在验证集上的表现，单位为百分比}\label{tab:post}
+\centering\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{验证集 32 张图像上的三轮双眼定位结果与训练集均值诊断对照}\label{tab:lab4_eyes}
 \begin{tabular}{lrrrr}
 \toprule
-后处理策略 & Precision & Recall & F1 & IoU \\
+定位方法 & 配对数 & 首选 $e\le 0.15$ & 首选 $e\le 0.25$ & 中位误差 $e$ \\
 \midrule
-无处理（原始阈值） & 52.43 & 60.39 & 56.13 & 39.01 \\
-仅填孔 & 58.34 & 84.71 & 69.10 & 52.78 \\
-最大连通域加填孔（选定方案） & 64.86 & 82.70 & 72.70 & 57.11 \\
-$5\times5$ 闭运算后最大连通域加填孔 & 63.39 & 83.30 & 71.99 & 56.24 \\
+第一轮：无位置先验（肤色框内搜索） & 30/32 & 13/32（40.6\%） & 13/32（40.6\%） & 0.2648 \\
+第二轮：双眼中点弱先验（$w_p=0.20$） & 30/32 & 15/32（46.9\%） & 15/32（46.9\%） & 0.1876 \\
+第三轮：左右眼独立窗口约束（$w_p=0.65$） & 29/32 & 26/32（81.3\%） & 28/32（87.5\%） & 0.0466 \\
+诊断对照：直接输出训练集双眼均值 & 32/32 & 32/32（100.0\%） & 32/32（100.0\%） & 0.0569 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-由表~\ref{tab:post} 可见，在 $k=1.25$ 下，内部填孔将全局 F1 从 56.13\% 提升至 69.10\%（+12.97 个百分点），最大连通域筛选进一步将 Precision 提高至 64.86\%、F1 提升至 72.70\%；而先做 $5\times5$ 闭运算再取最大连通域反而使 F1 略降至 71.99\%，原因在于无空间边界约束的闭运算容易将脸部边缘与邻近的头发、脖颈桥接成同一连通块，从而引入额外误检。据此，实验三选定“$k=1.25$ + 最大连通域 + 填孔”作为初版固定方案。
+从表~\ref{tab:lab4_eyes} 可以看到两层信息：
+一方面，加入左右眼独立搜索窗后，验证集上 $e\le 0.25$ 的合格样本数从 13/32 提高到了 28/32（$e\le 0.15$ 达到 26/32），29 张成功配对图像的中位误差从 0.2648 降到 0.0466。图~\ref{fig:lab4_eye_00590} 展示了样本 00590 的三轮变化：前两轮中双眉暗斑的响应和面积都很突出，导致预测点（红圈）落在眉毛上；第三轮通过左右眼搜索窗限制了查找范围，并结合窗内黑帽响应准确选中了双眼位置，定位误差 $e$ 从 0.265 降到 0.036。
 
-\subsection{方法设计特点与取舍分析}
+另一方面，表~\ref{tab:lab4_eyes} 最后一行的诊断对照也很值得注意：如果完全不看图像内容、直接在每张验证图上输出训练集的双眼平均坐标，$e\le 0.15$ 也能达到 32/32（中位误差 0.0569，略高于第三轮检测到的 0.0466）。这说明当前数据集的人像经过了高度统一的居中对齐裁剪；第三轮定位准确率的大幅上升，很大程度上依赖于这一构图先验将搜索范围缩小到了真实眼睛附近，而在窗口内部，黑帽响应的作用主要是贴合具体图像的眼部中心（使中位误差比固定均值更小）。
 
-表~\ref{tab:tradeoff} 总结了实验三初版方案在建模阶段的主要设计取舍及其在复杂场景下对应的局限性，这些局限正是后续实验四重点攻克的对象。
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{lab4_eye_00590.jpg}
+\caption{验证图 00590 的三轮双眼定位对照与中间特征图。前两轮均误选双眉（红圈偏离绿十字真值），第三轮在左右眼统计窗口内结合灰度黑帽响应选到了双眼。}
+\label{fig:lab4_eye_00590}
+\end{figure}
 
-\begin{table}[H]
-\centering\small
-\setlength{\tabcolsep}{4pt}
-\caption{实验三基础方案的设计取舍与潜在局限}\label{tab:tradeoff}
-\begin{tabular}{p{3.2cm}p{5.0cm}p{6.1cm}}
-\toprule
-设计选择 & 建模动机 & 复杂场景下的局限性 \\
-\midrule
-仅用 Cr/Cb，舍弃 Y 通道 & 降低光照强弱波动对色度阈值的干扰 & 暖调深色头发与皮肤在色度上重叠（如 00718），且丢失眉眼暗部几何线索 \\
-全局固定阈值 $k=1.25$ & 保持参数简洁，抑制全图背景与头发误检 & 暗光或冷偏色图像肤色候选严重碎裂（如 00609、00562） \\
-轴对齐矩形阈值 & 单通道独立判别，计算直观高效 & 未利用 Cr/Cb 间 $-0.7644$ 的负相关性 \\
-无边界最大连通域 + 填孔 & 不依赖外部检测器即可排除分离噪点并恢复五官 & 面部轮廓断裂时填孔失效，头发/脖颈粘连时无法截断外部误检 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\subsection{两级面积比回退与无配对处理}
+
+在检查第三轮未产生配对的 3 张图像（00592、00655、00690）时，我们发现其中有两张（00655 与 00690）在左右眼窗口内其实已经提取到了对应的眼部暗斑，只是因为单侧眼部受刘海遮挡或阴影影响，一侧暗斑偏小、另一侧偏大，左右面积比 $r_{\text{area}}$ 约为 0.275，恰好卡在第三轮设定的 $0.30$ 下限之外（甚至使 00690 从前两轮有配对变成了无配对）。
+
+如果直接把所有图像的候选面积比下限统一降到 $0.20$，在已有合格配对的图像上可能会放进一些大小悬殊的干扰组合；但如果只在严格条件（$r_{\text{area}}\ge 0.30$）找不到任何配对时，才退一步尝试放宽条件（$r_{\text{area}}\ge 0.20$），就不会影响原有 29 张图像的严格配对结果。因此，后续流程采用了如代码~\textbf{3-1} 所示的两级回退逻辑：
+\begin{enumerate}
+\item \textbf{严格配对（\texttt{standard\_pair}）：}优先使用 $r_{\text{area}}\ge 0.30$ 的规则查找双眼，验证集上有 29 张图像在这一步获得配对；
+\item \textbf{放宽面积比恢复（\texttt{recovered\_pair}）：}若严格配对列表为空，则将面积比下限放宽至 $r_{\text{area}}\ge 0.20$ 重新配对，00655 与 00690 均在这一步恢复了双眼配对；
+\item \textbf{无配对回退（\texttt{no\_pair}）：}若放宽后仍无可用配对（验证集中仅 00592 一张），则不强行填入训练集平均眼位，而是直接回退保留实验三的分割结果。
+\end{enumerate}
+
+\noindent\textbf{代码 3-1}\quad 双窗黑帽眼睛定位与两级面积比回退（eyes.py, dual\_ellipse.py）
+\begin{lstlisting}
+def choose_eye_pair(strict_pairs, relaxed_pairs):
+    if strict_pairs:
+        return strict_pairs[0], "standard_pair"
+    if relaxed_pairs:
+        return relaxed_pairs[0], "recovered_pair"
+    return None, "no_pair"
+
+# 在左右眼 3*sigma 统计椭圆窗内分别计算黑帽 Otsu 阈值与候选配对得分
+d2 = ((xx / w - eye["mean"][0]) / eye["sigma"][0]) ** 2 + \
+     ((yy / h - eye["mean"][1]) / eye["sigma"][1]) ** 2
+window = d2 <= prior["window_radius_sigma"] ** 2
+otsu, _ = cv2.threshold(response[window].reshape(-1, 1), 0, 255,
+                        cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+local = ((response > max(config["minimum_response"], otsu)) & window).astype(np.uint8)
+position = math.exp(-0.25 * (a["prior_distance_squared"] + b["prior_distance_squared"]))
+score = (1 - prior["weight"]) * base + prior["weight"] * position
+\end{lstlisting}
